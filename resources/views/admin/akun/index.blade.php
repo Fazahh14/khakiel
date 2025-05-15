@@ -15,7 +15,7 @@
 
         {{-- Tombol dan Form Pencarian --}}
         <div class="top-controls">
-            <a href="{{ route('akun.create') }}" class="btn-tambah">+ Tambah Akun</a>
+            <a href="{{ route('admin.akun.create') }}" class="btn-tambah">+ Tambah Akun</a>
 
             <form class="search-box">
                 <input type="text" id="searchInput" class="search-input" placeholder="Cari nama/email..." oninput="searchTable()">
@@ -43,8 +43,8 @@
                             <td>{{ $akun->email }}</td>
                             <td>********</td>
                             <td>
-                                <a href="{{ route('akun.edit', $akun->id) }}" class="btn btn-sm btn-edit">Edit</a>
-                                <form action="{{ route('akun.destroy', $akun->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin hapus akun ini?')">
+                                <a href="{{ route('admin.akun.edit', $akun->id) }}" class="btn btn-sm btn-edit">Edit</a>
+                                <form action="{{ route('admin.akun.destroy', $akun->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin hapus akun ini?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-hapus">Hapus</button>

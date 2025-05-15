@@ -4,70 +4,107 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/admin/statuspesanan/index.css') }}">
+<style>
+    .btn-simpan {
+        background-color: #198754;
+        color: white;
+        border: none;
+    }
+
+    .btn-simpan:hover {
+        background-color: #157347;
+    }
+
+    .btn-hapus {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    .btn-hapus:hover {
+        background-color: #bb2d3b;
+    }
+</style>
 @endpush
 
 @section('content')
 <div class="container page-content">
-    <div class="card">
+    <div class="card p-4">
         <h2 class="text-center mb-4 fw-bold text-uppercase text-dark">Kelola Status Pesanan</h2>
 
-        <div class="top-controls">
-            <a href="#" class="btn-tambah">+ Tambah Status</a>
-
-            <form action="#" method="GET" class="search-box">
-                <input type="text" name="search" class="search-input" placeholder="Cari nama pemesan...">
-                <i class="bi bi-search"></i>
-            </form>
-        </div>
+        @if(session('success'))
+            <div class="alert alert-success text-center">{{ session('success') }}</div>
+        @endif
 
         <div class="table-responsive">
-            <table class="table table-hover text-center">
-                <thead>
+            <table class="table table-hover text-center align-middle" id="statusTable">
+                <thead class="table-light">
                     <tr>
                         <th>ID</th>
-                        <th>Nama Pemesan</th>
-                        <th>Nama Produk</th>
+                        <th>Nama</th>
+                        <th>Alamat</th>
+                        <th>Telepon</th>
                         <th>Tanggal Pesanan</th>
+                        <th>Total</th>
                         <th>Status</th>
-                        <th>Harga</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($statusPesanan as $status)
+                    @forelse($transaksis as $transaksi)
                     <tr>
-                        <td>{{ $status->id }}</td>
-                        <td>{{ $status->nama_pemesan }}</td>
-                        <td>{{ $status->nama_produk }}</td>
-                        <td>{{ $status->tanggal_pesanan ? \Carbon\Carbon::parse($status->tanggal_pesanan)->format('d F Y') : '-' }}</td>
+                        <td>{{ $transaksi->id }}</td>
+                        <td>{{ $transaksi->nama }}</td>
+                        <td>{{ $transaksi->alamat }}</td>
+                        <td>{{ $transaksi->telepon }}</td>
+                        <td>{{ $transaksi->tanggal_pesanan }}</td>
+                        <td>Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
                         <td>
-                            <span class="badge 
-                                @if($status->status_pesanan == 'sedang diproses') badge-proses
-                                @elseif($status->status_pesanan == 'selesai') badge-selesai
-                                @elseif($status->status_pesanan == 'belum diproses') badge-belum
-                                @elseif($status->status_pesanan == 'pesanan dibatalkan') badge-batal
-                                @endif">
-                                {{ ucfirst($status->status_pesanan) }}
-                            </span>
+                            <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST" class="d-flex gap-2 justify-content-center align-items-center">
+                                @csrf
+                                @method('PUT')
+                                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" required>
+                                    <option value="pending" {{ $transaksi->status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="belum diproses" {{ $transaksi->status == 'belum diproses' ? 'selected' : '' }}>Belum Diproses</option>
+                                    <option value="sedang diproses" {{ $transaksi->status == 'sedang diproses' ? 'selected' : '' }}>Sedang Diproses</option>
+                                    <option value="selesai" {{ $transaksi->status == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                </select>
+                            </form>
                         </td>
-                        <td>Rp {{ number_format($status->harga, 0, ',', '.') }}</td>
                         <td>
-                            <a href="{{ route('kelolastatuspesanan.edit', $status->id) }}" class="btn btn-sm btn-edit">Edit</a>
-                            <form action="{{ route('kelolastatuspesanan.destroy', $status->id) }}" method="POST" style="display:inline;">
+                            <form action="{{ route('admin.kelolastatuspesanan.destroy', $transaksi->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pesanan ini?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-hapus" onclick="return confirm('Yakin ingin menghapus?')">Hapus</button>
+                                <button type="submit" class="btn btn-sm btn-hapus">Hapus</button>
                             </form>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7">Belum ada status pesanan.</td>
+                        <td colspan="8" class="text-muted">Belum ada data pesanan.</td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        {{-- Pagination --}}
+        @if($transaksis->hasPages())
+        <div class="d-flex justify-content-end mt-4">
+            {{ $transaksis->onEachSide(1)->links() }}
+        </div>
+        @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const alert = document.querySelector('.alert-success');
+        if (alert) {
+            setTimeout(() => alert.remove(), 4000);
+        }
+    });
+</script>
+@endpush

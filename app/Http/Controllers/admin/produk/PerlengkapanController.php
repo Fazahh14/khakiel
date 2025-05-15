@@ -36,7 +36,7 @@ class PerlengkapanController extends Controller
         }
 
         Produk::create($data);
-        return redirect()->route('perlengkapan.index')->with('success', 'Produk berhasil ditambahkan');
+        return redirect()->route('admin.perlengkapan.index')->with('success', 'Produk berhasil ditambahkan');
     }
 
     public function edit($id)
@@ -62,12 +62,12 @@ class PerlengkapanController extends Controller
         }
 
         $produk->update($data);
-        return redirect()->route('perlengkapan.index')->with('success', 'Produk berhasil diperbarui');
+        return redirect()->route('admin.perlengkapan.index')->with('success', 'Produk berhasil diperbarui');
     }
 
     public function destroy($id)
     {
         Produk::findOrFail($id)->delete();
-        return redirect()->route('perlengkapan.index')->with('success', 'Produk berhasil dihapus');
+        return redirect()->route('admin.perlengkapan.index')->with('success', 'Produk berhasil dihapus');
     }
 }

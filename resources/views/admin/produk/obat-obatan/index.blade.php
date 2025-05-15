@@ -2,76 +2,67 @@
 
 @section('title', 'Kelola Produk Obat-obatan')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/admin/produk/obatobatan/index.css') }}">
+@endpush
+
 @section('content')
-<div class="container py-4">
+<div class="container page-content">
+    <div class="card">
+        <h2 class="text-center mb-4 fw-bold text-uppercase text-dark">Kelola Produk Obat-obatan</h2>
 
-    {{-- Header --}}
-    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between bg-light px-4 py-3 rounded shadow mb-4 gap-3">
-        <a href="{{ route('obat-obatan.create') }}" class="btn btn-secondary">
-            + Tambah Produk
-        </a>
+        <div class="top-controls">
+            <a href="{{ route('admin.obat-obatan.create') }}" class="btn-tambah">+ Tambah Produk</a>
 
-        <h2 class="h5 text-center flex-grow-1 mb-0 fw-bold text-dark">Kelola Produk Obat-obatan</h2>
-
-        <div class="d-flex align-items-center gap-2">
-            <div class="input-group">
-                <input type="text" id="searchInput" oninput="searchTable()" class="form-control" placeholder="Cari nama produk...">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
-            </div>
+            <form action="#" method="GET" class="search-box">
+                <input type="text" id="searchInput" oninput="searchTable()" class="search-input" placeholder="Cari nama produk...">
+                <i class="bi bi-search"></i>
+            </form>
         </div>
-    </div>
 
-    {{-- Tabel --}}
-    <div class="table-responsive shadow rounded bg-white">
-        <table class="table table-bordered table-hover align-middle text-center" id="produkTable">
-            <thead class="table-secondary text-uppercase text-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Nama Produk</th>
-                    <th>Stok</th>
-                    <th>Harga</th>
-                    <th>Deskripsi</th>
-                    <th>Gambar</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($produk as $p)
+        <div class="table-responsive">
+            <table class="table table-hover text-center" id="produkTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nama Produk</th>
+                        <th>Stok</th>
+                        <th>Harga</th>
+                        <th>Gambar</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($produk as $p)
                     <tr>
                         <td>{{ $p->id }}</td>
                         <td>{{ $p->nama }}</td>
                         <td>{{ $p->stok }}</td>
                         <td>Rp {{ number_format($p->harga, 0, ',', '.') }}</td>
-                        <td>{{ $p->deskripsi }}</td>
                         <td>
                             @if($p->gambar)
-                                <img src="{{ asset('storage/' . $p->gambar) }}" class="img-thumbnail" style="width: 64px; height: 64px; object-fit: cover;" alt="gambar">
+                                <img src="{{ asset('storage/' . $p->gambar) }}" alt="gambar" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px;">
                             @else
                                 <span class="text-muted fst-italic">Tidak ada</span>
                             @endif
                         </td>
                         <td>
-                            <div class="d-flex justify-content-center gap-2">
-                                <a href="{{ route('obat-obatan.edit', $p->id) }}" class="btn btn-warning btn-sm">
-                                    Edit
-                                </a>
-                                <form action="{{ route('obat-obatan.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Yakin ingin hapus produk ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                                        Hapus
-                                    </button>
-                                </form>
-                            </div>
+                            <a href="{{ route('admin.obat-obatan.edit', $p->id) }}" class="btn btn-sm btn-edit">Edit</a>
+                            <form action="{{ route('admin.obat-obatan.destroy', $p->id) }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-hapus" onclick="return confirm('Yakin ingin menghapus?')">Hapus</button>
+                            </form>
                         </td>
                     </tr>
-                @empty
+                    @empty
                     <tr>
-                        <td colspan="7" class="text-muted py-3">Tidak ada produk ditemukan.</td>
+                        <td colspan="6" class="text-muted">Belum ada produk.</td>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

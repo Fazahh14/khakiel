@@ -36,7 +36,7 @@ class ObatObatanController extends Controller
         }
 
         Produk::create($data);
-        return redirect()->route('obat-obatan.index')->with('success', 'Produk berhasil ditambahkan');
+        return redirect()->route('admin.obat-obatan.index')->with('success', 'Produk berhasil ditambahkan');
     }
 
     public function edit($id)
@@ -62,12 +62,12 @@ class ObatObatanController extends Controller
         }
 
         $produk->update($data);
-        return redirect()->route('obat-obatan.index')->with('success', 'Produk berhasil diperbarui');
+        return redirect()->route('admin.obat-obatan.index')->with('success', 'Produk berhasil diperbarui');
     }
 
     public function destroy($id)
     {
         Produk::findOrFail($id)->delete();
-        return redirect()->route('obat-obatan.index')->with('success', 'Produk berhasil dihapus');
+        return redirect()->route('admin.obat-obatan.index')->with('success', 'Produk berhasil dihapus');
     }
 }

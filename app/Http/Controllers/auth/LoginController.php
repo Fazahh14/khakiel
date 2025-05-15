@@ -17,7 +17,7 @@ class LoginController extends Controller
     // Proses login
     public function login(Request $request)
     {
-        // Validasi input dari form
+        // Validasi input
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
@@ -27,32 +27,30 @@ class LoginController extends Controller
             'password.required' => 'Password wajib diisi.',
         ]);
 
-        // Proses autentikasi
+        // Coba autentikasi
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
             return match (Auth::user()->role) {
-                'buyer'  => redirect()->route('pembeli.produk.index')->with('success', 'Login berhasil!'),
-                'seller' => redirect()->route('akun.index')->with('success', 'Login admin berhasil!'),
-                default  => abort(403),
+                'buyer' => redirect()->route('pembeli.produk.index')->with('success', 'Login berhasil!'),
+                'seller' => redirect()->route('admin.akun.index')->with('success', 'Login admin berhasil!'), // ← diperbaiki disini
+                default => abort(403, 'Role tidak dikenali'),
             };
         }
 
-        // Jika login gagal
+        // Jika gagal login
         return back()->withErrors([
-            'email' => 'Ups! Email atau password yang anda masukkan salah.',
+            'email' => 'Ups! Email atau password salah.',
         ])->onlyInput('email');
     }
 
-    // Proses logout
+    // Logout
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // ✅ Arahkan ke halaman index produk setelah logout
         return redirect()->route('pembeli.produk.index')->with('status', 'Berhasil logout!');
     }
 }

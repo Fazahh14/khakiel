@@ -3,100 +3,164 @@
 @section('title', 'Edit Artikel')
 
 @section('content')
-<div class="p-6 max-w-3xl mx-auto animate-fade-in-up">
-    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">✏️ Edit Artikel</h1>
+@if(session('success'))
+    <div class="alert alert-success text-center">
+        {{ session('success') }}
+    </div>
+@endif
 
-    {{-- Tampilkan error validasi --}}
+<style>
+    .form-wrapper {
+        background-color: #E5CBB7;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 700px;
+        margin: 0 auto;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-wrapper h2 {
+        font-weight: bold;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .btn-simpan {
+        background-color: #198754;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .btn-simpan:hover {
+        background-color: #157347;
+    }
+
+    .preview-img {
+        max-width: 250px;
+        max-height: 200px;
+        margin-top: 15px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="form-wrapper">
+    <h2>Edit Artikel</h2>
+
     @if ($errors->any())
-        <div class="bg-red-100 text-red-700 p-4 rounded mb-5 border border-red-300 shadow-sm">
-            <ul class="list-disc list-inside text-sm">
+        <div class="alert alert-danger">
+            <ul class="mb-0 ps-3">
                 @foreach ($errors->all() as $error)
-                    <li class="mb-1">{{ $error }}</li>
+                    <li class="small">{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
     @endif
 
-    <form action="{{ route('admin.artikel.update', $artikel->id) }}" method="POST" enctype="multipart/form-data"
-        class="space-y-6 bg-[#E5CBB7] p-6 rounded-2xl shadow-lg transition-all duration-300 border border-[#d1b59a]">
+    <form action="{{ route('admin.artikel.update', $artikel->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
         {{-- Judul --}}
-        <div>
-            <label class="block mb-2 font-semibold text-gray-800">Judul Artikel</label>
-            <input type="text" name="judul" value="{{ old('judul', $artikel->judul) }}" required
-                class="w-full bg-[#f0dfd0] text-gray-800 border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition">
+        <div class="mb-3">
+            <label for="judul" class="form-label">Judul Artikel</label>
+            <input type="text" name="judul" id="judul" class="form-control bg-light" required
+                   value="{{ old('judul', $artikel->judul) }}">
+            @error('judul') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
         {{-- Konten --}}
-        <div>
-            <label class="block mb-2 font-semibold text-gray-800">Konten</label>
-            <textarea name="konten" rows="6" required
-                class="w-full bg-[#f0dfd0] text-gray-800 border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition">{{ old('konten', $artikel->konten) }}</textarea>
+        <div class="mb-3">
+            <label for="konten" class="form-label">Konten</label>
+            <textarea name="konten" id="konten" rows="6" class="form-control bg-light" required>{{ old('konten', $artikel->konten) }}</textarea>
+            @error('konten') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
         {{-- Gambar --}}
-        <div>
-            <label class="block mb-2 font-semibold text-gray-800">Upload Gambar Baru (Opsional)</label>
-            <input type="file" name="gambar" accept="image/*"
-                class="w-full bg-[#f9f5f2] text-gray-700 border border-gray-300 p-2 rounded-md focus:outline-none transition hover:bg-[#ecd3b5]" onchange="previewGambar(event)">
+        <div class="mb-3">
+            <label for="gambar" class="form-label">Gambar Utama</label>
+            <input type="file" name="gambar" id="gambar" class="form-control" onchange="previewGambar(event)">
+            @error('gambar') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
 
-            @if ($artikel->gambar)
-                <p class="mt-4 text-sm text-gray-700 font-medium">Gambar Lama:</p>
-                <img src="{{ asset('storage/' . $artikel->gambar) }}" alt="Gambar Lama"
-                    class="w-60 h-auto mt-2 rounded-md border border-gray-400 shadow">
-            @endif
-
-            <img id="preview" class="mt-4 w-60 h-auto hidden rounded-md border border-gray-400 shadow-md" />
+            <div class="mt-3">
+                @if ($artikel->gambar)
+                    <img id="preview" src="{{ asset('storage/' . $artikel->gambar) }}" class="preview-img" alt="Gambar Saat Ini">
+                @else
+                    <img id="preview" class="preview-img d-none" alt="Preview Gambar" />
+                @endif
+            </div>
         </div>
 
         {{-- Tombol --}}
-        <div class="flex justify-end gap-2">
-            <a href="{{ route('admin.artikel.index') }}"
-                class="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition font-medium shadow-sm">
-                Batal
-            </a>
-            <button type="submit"
-                class="px-5 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition font-semibold shadow-md hover:shadow-lg active:scale-95">
-                Update Artikel
-            </button>
+        <div class="text-center mt-4 d-flex justify-content-center gap-2">
+            <a href="{{ route('admin.artikel.index') }}" class="btn btn-secondary px-4">Batal</a>
+            <button type="submit" class="btn btn-simpan px-4">Simpan Perubahan</button>
         </div>
     </form>
 </div>
 @endsection
 
 @push('scripts')
-<style>
-    .animate-fade-in-up {
-        animation: fadeInUp 0.5s ease-out both;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>
-
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 <script>
-    function previewGambar(event) {
-        const input = event.target;
-        const reader = new FileReader();
-        const preview = document.getElementById('preview');
-
-        reader.onload = function () {
-            preview.src = reader.result;
-            preview.classList.remove('hidden');
+    class MyUploadAdapter {
+        constructor(loader) {
+            this.loader = loader;
         }
 
-        if (input.files && input.files[0]) {
-            reader.readAsDataURL(input.files[0]);
+        upload() {
+            return this.loader.file.then(file => new Promise((resolve, reject) => {
+                const data = new FormData();
+                data.append('upload', file);
+
+                fetch("{{ route('admin.artikel.upload.gambar') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: data
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.url) {
+                        resolve({ default: result.url });
+                    } else {
+                        reject(result.message || 'Upload gagal');
+                    }
+                })
+                .catch(error => {
+                    reject('Upload gagal: ' + error.message);
+                });
+            }));
+        }
+
+        abort() {}
+    }
+
+    function MyCustomUploadAdapterPlugin(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+            return new MyUploadAdapter(loader);
+        };
+    }
+
+    ClassicEditor
+        .create(document.querySelector('#konten'), {
+            extraPlugins: [MyCustomUploadAdapterPlugin],
+        })
+        .catch(error => {
+            console.error(error);
+        });
+
+    function previewGambar(event) {
+        const reader = new FileReader();
+        reader.onload = function () {
+            const preview = document.getElementById('preview');
+            preview.src = reader.result;
+            preview.classList.remove('d-none');
+        }
+        if (event.target.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
         }
     }
 </script>

@@ -9,17 +9,13 @@ use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
-    /**
-     * Tampilkan form registrasi.
-     */
+    // Tampilkan form registrasi
     public function showRegistrationForm()
     {
         return view('auth.register');
     }
 
-    /**
-     * Proses pendaftaran user baru.
-     */
+    // Proses registrasi user baru
     public function register(Request $request)
     {
         $request->validate([
@@ -36,7 +32,7 @@ class RegisterController extends Controller
         ]);
 
         User::create([
-            'name' => $request->name, // ⬅️ ini sekarang dinamis dari input user
+            'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'buyer',

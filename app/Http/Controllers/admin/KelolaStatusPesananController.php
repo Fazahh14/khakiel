@@ -4,32 +4,46 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\StatusPesanan;
+use App\Models\Transaksi;
 
 class KelolaStatusPesananController extends Controller
 {
+    /**
+     * Menampilkan semua status pesanan.
+     */
     public function index()
     {
-        $statusPesanan = StatusPesanan::all();
-        return view('admin.statuspesanan.index', compact('statusPesanan'));
+        $transaksis = Transaksi::orderBy('id', 'asc')->paginate(25);
+        return view('admin.statuspesanan.index', compact('transaksis'));
     }
 
-    public function edit($id)
-    {
-        $status = StatusPesanan::findOrFail($id);
-        return view('admin.statuspesanan.edit', compact('status'));
-    }
-
+    /**
+     * Memperbarui status pesanan.
+     */
     public function update(Request $request, $id)
     {
         $request->validate([
-            'status_pesanan' => 'required|string|max:255'
+            'status' => 'required|in:pending,belum diproses,sedang diproses,selesai'
         ]);
 
-        $status = StatusPesanan::findOrFail($id);
-        $status->status_pesanan = $request->status_pesanan;
-        $status->save();
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->update([
+            'status' => $request->status
+        ]);
 
-        return redirect()->route('kelolastatuspesanan.index')->with('success', 'Status pesanan berhasil diperbarui.');
+        return redirect()->route('admin.kelolastatuspesanan.index')
+                         ->with('success', 'Status pesanan berhasil diperbarui.');
+    }
+
+    /**
+     * Menghapus pesanan.
+     */
+    public function destroy($id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        $transaksi->delete();
+
+        return redirect()->route('admin.kelolastatuspesanan.index')
+                         ->with('success', 'Pesanan berhasil dihapus.');
     }
 }

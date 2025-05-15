@@ -3,89 +3,172 @@
 @section('title', 'Tambah Artikel')
 
 @section('content')
-<div class="p-6 max-w-3xl mx-auto animate-fade-in-up">
-    <h1 class="text-3xl font-bold mb-6 text-left text-gray-800">Tambah Artikel Baru</h1>
+@if(session('success'))
+    <div class="alert alert-success text-center">
+        {{ session('success') }}
+    </div>
+@endif
 
-    {{-- Notifikasi error --}}
+<style>
+    .form-wrapper {
+        background-color: #E5CBB7;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 700px;
+        margin: 0 auto;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-wrapper h2 {
+        font-weight: bold;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .btn-simpan {
+        background-color: #198754;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .btn-simpan:hover {
+        background-color: #157347;
+    }
+
+    .preview-img {
+        width: 140px;
+        height: 100px;
+        margin-top: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        object-fit: cover;
+        display: none;
+    }
+
+    /* Tambahan untuk memperbesar area CKEditor (sekitar 2 baris lebih tinggi) */
+    .ck-editor__editable_inline {
+        min-height: 250px !important;
+    }
+</style>
+
+<div class="form-wrapper">
+    <h2>Tambah Artikel</h2>
+
     @if ($errors->any())
-        <div class="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-md shadow-sm mb-5">
-            <ul class="list-disc list-inside text-sm">
+        <div class="alert alert-danger">
+            <ul class="mb-0 ps-3">
                 @foreach ($errors->all() as $error)
-                    <li class="mb-1">{{ $error }}</li>
+                    <li class="small">{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
     @endif
 
-    <form action="{{ route('admin.artikel.store') }}" method="POST" enctype="multipart/form-data"
-        class="bg-[#E5CBB7] p-6 rounded-2xl shadow-lg space-y-6 border border-[#d1b59a] transition-all duration-300">
+    <form action="{{ route('admin.artikel.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         {{-- Judul --}}
-        <div>
-            <label class="block mb-2 font-semibold text-gray-800">Judul Artikel</label>
-            <input type="text" name="judul" value="{{ old('judul') }}" required
-                class="w-full bg-[#f0dfd0] text-gray-800 border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition">
+        <div class="mb-3">
+            <label for="judul" class="form-label">Judul Artikel</label>
+            <input type="text" name="judul" id="judul" value="{{ old('judul') }}" required class="form-control bg-light">
+            @error('judul') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
         {{-- Konten --}}
-        <div>
-            <label class="block mb-2 font-semibold text-gray-800">Konten</label>
-            <textarea name="konten" rows="6" required
-                class="w-full bg-[#f0dfd0] text-gray-800 border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition">{{ old('konten') }}</textarea>
+        <div class="mb-3">
+            <label for="konten" class="form-label">Konten</label>
+            <textarea name="konten" id="konten" class="form-control bg-light">{{ old('konten') }}</textarea>
+            @error('konten') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
         {{-- Gambar --}}
-        <div>
-            <label class="block mb-2 font-semibold text-gray-800">Upload Gambar</label>
-            <input type="file" name="gambar" accept="image/*"
-                class="w-full bg-[#f0dfd0] text-gray-700 border border-gray-300 p-2 rounded-md focus:outline-none transition hover:bg-[#ecd3b5]" onchange="previewGambar(event)">
-            <img id="preview" class="mt-4 w-60 h-auto hidden rounded-lg border border-gray-400 shadow-md" />
+        <div class="mb-3">
+            <label for="gambar" class="form-label">Gambar Utama</label>
+            <input type="file" name="gambar" id="gambar" class="form-control" onchange="previewGambar(event)">
+            @error('gambar') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
+            <img id="preview" class="preview-img" alt="Preview Gambar">
         </div>
 
         {{-- Tombol --}}
-        <div class="flex justify-end gap-2 mt-4">
-            <a href="{{ route('admin.artikel.index') }}"
-                class="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition font-medium shadow-sm">Batal</a>
-            <button type="submit"
-                class="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition font-semibold shadow-md hover:shadow-lg active:scale-95">Simpan Artikel</button>
+        <div class="text-center mt-4 d-flex justify-content-center gap-2">
+            <a href="{{ route('admin.artikel.index') }}" class="btn btn-secondary px-4">Batal</a>
+            <button type="submit" class="btn btn-simpan px-4">Simpan Artikel</button>
         </div>
     </form>
 </div>
 @endsection
 
 @push('scripts')
-<style>
-    /* Animasi muncul dari bawah */
-    .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out both;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>
-
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 <script>
-    function previewGambar(event) {
-        const input = event.target;
-        const reader = new FileReader();
-        const preview = document.getElementById('preview');
-
-        reader.onload = function () {
-            preview.src = reader.result;
-            preview.classList.remove('hidden');
+    class MyUploadAdapter {
+        constructor(loader) {
+            this.loader = loader;
         }
 
-        if (input.files && input.files[0]) {
-            reader.readAsDataURL(input.files[0]);
+        upload() {
+            return this.loader.file.then(file => new Promise((resolve, reject) => {
+                const data = new FormData();
+                data.append('upload', file);
+
+                fetch("{{ route('admin.artikel.upload.gambar') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: data
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.url) {
+                        resolve({ default: result.url });
+                    } else {
+                        reject(result.message || 'Upload gagal');
+                    }
+                })
+                .catch(error => {
+                    reject('Upload gagal: ' + error.message);
+                });
+            }));
+        }
+
+        abort() {}
+    }
+
+    function MyCustomUploadAdapterPlugin(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+            return new MyUploadAdapter(loader);
+        };
+    }
+
+    ClassicEditor
+        .create(document.querySelector('#konten'), {
+            extraPlugins: [MyCustomUploadAdapterPlugin],
+            toolbar: {
+                items: [
+                    'heading', '|',
+                    'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
+                    'insertTable', 'blockQuote', 'undo', 'redo', '|',
+                    'imageUpload', 'mediaEmbed', 'htmlEmbed'
+                ]
+            },
+            htmlEmbed: {
+                showPreviews: true
+            }
+        })
+        .catch(error => {
+            console.error(error);
+        });
+
+    function previewGambar(event) {
+        const reader = new FileReader();
+        reader.onload = function () {
+            const preview = document.getElementById('preview');
+            preview.src = reader.result;
+            preview.style.display = 'block';
+        }
+        if (event.target.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
         }
     }
 </script>

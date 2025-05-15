@@ -21,7 +21,7 @@
     @stack('styles')
 </head>
 
-<body class="font-main">
+<body class="font-main" style="opacity: 0;"> {{-- ✅ Tambahkan opacity: 0 untuk efek fade-in --}}
 
     {{-- Header --}}
     <header class="header-container d-flex justify-content-between align-items-center px-4 py-3" style="background-color: #E5CBB7;">
@@ -51,11 +51,11 @@
     {{-- Navbar --}}
     <nav class="py-2" style="background-color: #E5CBB7;">
         <div class="container d-flex justify-content-center gap-3">
-            <a href="{{ route('akun.index') }}" class="nav-link {{ request()->is('akun*') ? 'text-primary fw-semibold' : 'text-dark' }}">Kelola Akun</a>
-            <a href="{{ route('produk.kelolaProduk') }}" class="nav-link {{ request()->is('admin/produk') ? 'text-primary fw-semibold' : 'text-dark' }}">Kelola Produk</a>
+            <a href="{{ route('admin.akun.index') }}" class="nav-link {{ request()->is('akun*') ? 'text-primary fw-semibold' : 'text-dark' }}">Kelola Akun</a>
+            <a href="{{ route('admin.produk.kelolaProduk') }}" class="nav-link {{ request()->is('admin/produk') ? 'text-primary fw-semibold' : 'text-dark' }}">Kelola Produk</a>
             <a href="{{ route('admin.artikel.index') }}" class="nav-link {{ request()->is('admin/artikel*') ? 'text-primary fw-semibold' : 'text-dark' }}">Kelola Artikel</a>
-            <a href="{{ route('kelolastatuspesanan.index') }}" class="nav-link {{ request()->is('admin/status-pesanan*') ? 'text-primary fw-semibold' : 'text-dark' }}">Kelola Status Pesanan</a>
-            <a href="{{ route('laporan.penjualan') }}" class="nav-link {{ request()->is('laporan/penjualan*') ? 'text-primary fw-semibold' : 'text-dark' }}">Laporan Penjualan</a>
+            <a href="{{ route('admin.kelolastatuspesanan.index') }}" class="nav-link {{ request()->is('admin/status-pesanan*') ? 'text-primary fw-semibold' : 'text-dark' }}">Kelola Status Pesanan</a>
+            <a href="{{ route('admin.laporan.penjualan') }}" class="nav-link {{ request()->is('laporan/penjualan*') ? 'text-primary fw-semibold' : 'text-dark' }}">Laporan Penjualan</a>
         </div>
     </nav>
 
@@ -95,5 +95,8 @@
             window.scrollTo(0, 0);
         };
     </script>
+
+    {{-- Tambahan script dari halaman --}}
+    @stack('scripts')
 </body>
 </html>

@@ -6,8 +6,10 @@
 <style>
     .produk-card-hover {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
-        min-height: 280px;
+        min-height: 280px; /* dikurangi agar tinggi seimbang */
         width: 100%;
+        padding-left: 5px;
+        padding-right: 5px;
     }
 
     .produk-card-hover:hover {
@@ -21,34 +23,57 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
+
+    .produk-img {
+        height: 180px; /* dikurangi dari 220px */
+        object-fit: cover;
+        border-radius: 0.5rem;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    /* Custom col-xl-1/5 (20%) untuk 5 card dalam 1 baris */
+    @media (min-width: 1200px) {
+        .custom-xl-1-5 {
+            width: 20%;
+            flex: 0 0 20%;
+        }
+    }
+
+    .btn-kecil {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+
+    .card-title {
+        font-size: 0.85rem;
+    }
+
+    .text-primary {
+        font-size: 0.8rem;
+    }
 </style>
 
-<div class="w-full max-w-7xl mx-auto px-4 py-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+<div class="container py-5">
+    <div class="row gx-4 gy-4">
         @foreach($produk as $item)
-            <div class="produk-card-hover relative bg-white p-4 rounded-xl shadow-md transition-all duration-300 group">
-                {{-- Link transparan untuk seluruh card --}}
-                <a href="{{ route('pembeli.produk.show', $item->id) }}" class="absolute inset-0 z-10"></a>
+            <div class="col-6 col-md-4 col-lg-3 custom-xl-1-5">
+                <div class="card produk-card-hover h-100 shadow-sm border-0 position-relative">
+                    <a href="{{ route('pembeli.produk.show', $item->id) }}" class="stretched-link"></a>
 
-                {{-- Gambar Produk --}}
-                <img src="{{ asset('storage/' . $item->gambar) }}" alt="{{ $item->nama }}"
-                     class="h-48 w-full object-cover rounded mb-3 relative z-0">
+                    <img src="{{ asset('storage/' . $item->gambar) }}" alt="{{ $item->nama }}" class="produk-img card-img-top">
 
-                {{-- Konten --}}
-                <div class="relative z-0 text-left">
-                    {{-- Harga --}}
-                    <p class="text-blue-600 font-bold text-sm mb-1 pl-2">
-                        Rp {{ number_format($item->harga, 0, ',', '.') }}
-                    </p>
+                    <div class="card-body p-2">
+                        <p class="text-primary fw-bold mb-1">
+                            Rp {{ number_format($item->harga, 0, ',', '.') }}
+                        </p>
 
-                    {{-- Nama Produk --}}
-                    <h3 class="text-base font-semibold line-clamp-2 mb-2 pl-2">{{ $item->nama }}</h3>
+                        <h5 class="card-title fw-semibold mb-2 line-clamp-2">{{ $item->nama }}</h5>
 
-                    {{-- Tombol Lihat Selengkapnya --}}
-                    <a href="{{ route('pembeli.produk.show', $item->id) }}"
-                       class="inline-block bg-blue-500 text-white text-xs font-medium px-4 py-2 rounded-full hover:bg-blue-600 transition z-20 relative ml-2">
-                        Lihat selengkapnya
-                    </a>
+                        <a href="{{ route('pembeli.produk.show', $item->id) }}" class="btn btn-primary btn-kecil rounded-pill">
+                            Lihat selengkapnya
+                        </a>
+                    </div>
                 </div>
             </div>
         @endforeach

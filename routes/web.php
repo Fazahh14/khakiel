@@ -17,6 +17,14 @@ use App\Http\Controllers\Admin\Produk\VitaminKucingController;
 use App\Http\Controllers\Pembeli\ProdukController;
 use App\Http\Controllers\Pembeli\KeranjangPembeliController;
 use App\Http\Controllers\Pembeli\CheckoutController;
+use App\Http\Controllers\Pembeli\BlogController;
+use App\Http\Controllers\Pembeli\InformasiPesananController;
+use App\Http\Controllers\Pembeli\WishlistController;
+
+// =============================
+// Upload Gambar CKEditor (Tanpa Middleware)
+// =============================
+Route::post('/admin/artikel/upload-gambar', [ArtikelController::class, 'uploadGambar'])->name('admin.artikel.upload.gambar');
 
 // =============================
 // Halaman Awal
@@ -29,7 +37,6 @@ Route::get('/', fn () => redirect()->route('pembeli.produk.index'));
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
@@ -40,59 +47,67 @@ Route::get('/produk', [ProdukController::class, 'index'])->name('pembeli.produk.
 Route::get('/produk/{id}', [ProdukController::class, 'show'])->name('pembeli.produk.show');
 
 // =============================
+// Blog (Publik - Tanpa Login)
+// =============================
+Route::get('/blog', [BlogController::class, 'index'])->name('pembeli.blog.index');
+Route::get('/blog/{id}', [BlogController::class, 'show'])->name('pembeli.blog.show');
+
+// =============================
 // Pembeli (User Role: buyer)
 // =============================
 Route::middleware(['auth', RedirectIfNotBuyer::class])->group(function () {
-    // Dashboard pembeli
     Route::get('/dashboard', fn () => redirect()->route('pembeli.produk.index'))->name('pembeli.dashboard');
 
-    // Keranjang Belanja
+    // Keranjang
     Route::prefix('keranjang')->name('keranjang.')->group(function () {
         Route::get('/', [KeranjangPembeliController::class, 'index'])->name('index');
         Route::post('/', [KeranjangPembeliController::class, 'store'])->name('store');
         Route::post('/tambah/{id}', [KeranjangPembeliController::class, 'tambah'])->name('tambah');
         Route::post('/kurang/{id}', [KeranjangPembeliController::class, 'kurang'])->name('kurang');
-        Route::post('/hapus/{id}', [KeranjangPembeliController::class, 'hapus'])->name('hapus');
+        Route::delete('/{id}', [KeranjangPembeliController::class, 'hapus'])->name('hapus'); // ✅ DELETE
         Route::post('/update', [KeranjangPembeliController::class, 'update'])->name('update');
     });
 
-    // =============================
-    // Checkout & Pembayaran via Midtrans
-    // =============================
+    // Checkout
     Route::post('/checkout/store-produk', [CheckoutController::class, 'storeProduk'])->name('checkout.storeProduk');
     Route::get('/checkout', [CheckoutController::class, 'form'])->name('checkout.form');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
     Route::post('/midtrans/callback', [CheckoutController::class, 'callback']);
+
+    // Informasi Pesanan
+    Route::get('/informasi-pesanan', [InformasiPesananController::class, 'index'])->name('pembeli.informasipesanan.index');
+
+    // Wishlist
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/tambah', [WishlistController::class, 'tambah'])->name('wishlist.tambah');
+    Route::post('/wishlist/hapus/{id}', [WishlistController::class, 'hapus'])->name('wishlist.hapus');
 });
 
 // =============================
 // Admin / Seller
 // =============================
-Route::middleware(['auth', RedirectIfNotSeller::class])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', RedirectIfNotSeller::class])->group(function () {
     Route::get('/akun', [AkunController::class, 'index'])->name('akun.index');
     Route::resource('akun', AkunController::class)->except(['index']);
 
     Route::get('/laporan/penjualan', [LaporanController::class, 'index'])->name('laporan.penjualan');
-    Route::get('/admin/produk', fn () => view('admin.produk.index'))->name('produk.kelolaProduk');
 
-    Route::prefix('admin')->name('admin.')->group(function () {
-        Route::resource('artikel', ArtikelController::class)->names('artikel');
-    });
+    Route::get('/produk', fn () => view('admin.produk.index'))->name('produk.kelolaProduk');
 
-    // Produk berdasarkan kategori
-    Route::resource('admin/produk/makanan-kucing', MakananKucingController::class)->names('makanan-kucing');
-    Route::resource('admin/produk/aksesoris', AksesorisController::class)->names('aksesoris');
-    Route::resource('admin/produk/obat-obatan', ObatObatanController::class)->names('obat-obatan');
-    Route::resource('admin/produk/perlengkapan', PerlengkapanController::class)->names('perlengkapan');
-    Route::resource('admin/produk/vitamin-kucing', VitaminKucingController::class)->names('vitamin-kucing');
+    Route::resource('artikel', ArtikelController::class)->names('artikel');
 
-    // Status Pesanan
-    Route::get('/admin/status-pesanan', [KelolaStatusPesananController::class, 'index'])->name('kelolastatuspesanan.index');
-    Route::get('/admin/status-pesanan/{id}/edit', [KelolaStatusPesananController::class, 'edit'])->name('kelolastatuspesanan.edit');
-    Route::put('/admin/status-pesanan/{id}', [KelolaStatusPesananController::class, 'update'])->name('kelolastatuspesanan.update');
+    Route::resource('produk/makanan-kucing', MakananKucingController::class)->names('makanan-kucing');
+    Route::resource('produk/aksesoris', AksesorisController::class)->names('aksesoris');
+    Route::resource('produk/obat-obatan', ObatObatanController::class)->names('obat-obatan');
+    Route::resource('produk/perlengkapan', PerlengkapanController::class)->names('perlengkapan');
+    Route::resource('produk/vitamin-kucing', VitaminKucingController::class)->names('vitamin-kucing');
+
+    Route::get('/status-pesanan', [KelolaStatusPesananController::class, 'index'])->name('kelolastatuspesanan.index');
+    Route::put('/status-pesanan/{id}', [KelolaStatusPesananController::class, 'update'])->name('kelolastatuspesanan.update');
+    Route::delete('/status-pesanan/{id}', [KelolaStatusPesananController::class, 'destroy'])->name('kelolastatuspesanan.destroy');
 });
 
 // =============================
-// Fallback
+// Fallback Route
 // =============================
-Route::get('/status', fn () => redirect()->route('pembeli.produk.index'))->name('status');
+Route::fallback(fn () => redirect()->route('pembeli.produk.index'));

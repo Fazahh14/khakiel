@@ -50,7 +50,7 @@
     <div class="row justify-content-center mb-4">
         {{-- Makanan Kucing --}}
         <div class="col-md-3 col-sm-6 mb-4 produk-wrapper">
-            <a href="{{ route('makanan-kucing.index') }}" class="text-decoration-none">
+            <a href="{{ route('admin.makanan-kucing.index') }}" class="text-decoration-none">
                 <div class="card produk-card text-center shadow-sm h-100 
                     {{ request()->routeIs('makanan-kucing.index') ? 'active' : '' }}">
                     <div class="card-body d-flex flex-column justify-content-center align-items-center">
@@ -65,7 +65,7 @@
 
         {{-- Aksesoris --}}
         <div class="col-md-3 col-sm-6 mb-4 produk-wrapper">
-            <a href="{{ route('aksesoris.index') }}" class="text-decoration-none">
+            <a href="{{ route('admin.aksesoris.index') }}" class="text-decoration-none">
                 <div class="card produk-card text-center shadow-sm h-100 
                     {{ request()->routeIs('aksesoris.index') ? 'active' : '' }}">
                     <div class="card-body d-flex flex-column justify-content-center align-items-center">
@@ -82,7 +82,7 @@
     <div class="row justify-content-center">
         {{-- Obat-obatan --}}
         <div class="col-md-3 col-sm-6 mb-4 produk-wrapper">
-            <a href="{{ route('obat-obatan.index') }}" class="text-decoration-none">
+            <a href="{{ route('admin.obat-obatan.index') }}" class="text-decoration-none">
                 <div class="card produk-card text-center shadow-sm h-100 
                     {{ request()->routeIs('obat-obatan.index') ? 'active' : '' }}">
                     <div class="card-body d-flex flex-column justify-content-center align-items-center">
@@ -97,7 +97,7 @@
 
         {{-- Perlengkapan --}}
         <div class="col-md-3 col-sm-6 mb-4 produk-wrapper">
-            <a href="{{ route('perlengkapan.index') }}" class="text-decoration-none">
+            <a href="{{ route('admin.perlengkapan.index') }}" class="text-decoration-none">
                 <div class="card produk-card text-center shadow-sm h-100 
                     {{ request()->routeIs('perlengkapan.index') ? 'active' : '' }}">
                     <div class="card-body d-flex flex-column justify-content-center align-items-center">
@@ -112,7 +112,7 @@
 
         {{-- Vitamin Kucing --}}
         <div class="col-md-3 col-sm-6 mb-4 produk-wrapper">
-            <a href="{{ route('vitamin-kucing.index') }}" class="text-decoration-none">
+            <a href="{{ route('admin.vitamin-kucing.index') }}" class="text-decoration-none">
                 <div class="card produk-card text-center shadow-sm h-100 
                     {{ request()->routeIs('vitamin-kucing.index') ? 'active' : '' }}">
                     <div class="card-body d-flex flex-column justify-content-center align-items-center">

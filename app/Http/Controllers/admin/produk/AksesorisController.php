@@ -36,7 +36,7 @@ class AksesorisController extends Controller
         }
 
         Produk::create($data);
-        return redirect()->route('aksesoris.index')->with('success', 'Produk berhasil ditambahkan');
+        return redirect()->route('admin.aksesoris.index')->with('success', 'Produk berhasil ditambahkan');
     }
 
     public function edit($id)
@@ -72,7 +72,7 @@ class AksesorisController extends Controller
 
         $produk->update($data);
 
-        return redirect()->route('aksesoris.index')->with('success', 'Produk berhasil diperbarui');
+        return redirect()->route('admin.aksesoris.index')->with('success', 'Produk berhasil diperbarui');
     }
 
     public function destroy($id)
@@ -86,6 +86,6 @@ class AksesorisController extends Controller
 
         $produk->delete();
 
-        return redirect()->route('aksesoris.index')->with('success', 'Produk berhasil dihapus');
+        return redirect()->route('admin.aksesoris.index')->with('success', 'Produk berhasil dihapus');
     }
 }

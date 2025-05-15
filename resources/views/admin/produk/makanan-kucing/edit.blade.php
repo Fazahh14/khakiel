@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+]@extends('layouts.admin')
 
 @section('title', 'Edit Produk Makanan Kucing')
 
@@ -61,31 +61,28 @@
 <div class="form-wrapper">
     <h2>Edit Produk</h2>
 
-    <form action="{{ route('makanan-kucing.update', $produk->id) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.makanan-kucing.update', $produk->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
         {{-- Nama Produk --}}
         <div class="mb-3">
             <label for="nama" class="form-label">Nama Produk</label>
-            <input type="text" name="nama" id="nama" class="form-control" required
-                   value="{{ old('nama', $produk->nama) }}">
+            <input type="text" name="nama" id="nama" class="form-control" required value="{{ old('nama', $produk->nama) }}">
             @error('nama') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
         {{-- Stok --}}
         <div class="mb-3">
             <label for="stok" class="form-label">Stok</label>
-            <input type="number" name="stok" id="stok" class="form-control" required
-                   value="{{ old('stok', $produk->stok) }}">
+            <input type="number" name="stok" id="stok" class="form-control" required value="{{ old('stok', $produk->stok) }}">
             @error('stok') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
         {{-- Harga --}}
         <div class="mb-3">
             <label for="harga" class="form-label">Harga</label>
-            <input type="number" name="harga" id="harga" class="form-control" required
-                   value="{{ old('harga', $produk->harga) }}">
+            <input type="number" name="harga" id="harga" class="form-control" required value="{{ old('harga', $produk->harga) }}">
             @error('harga') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
@@ -102,7 +99,6 @@
             <input type="file" name="gambar" id="gambar" class="form-control">
             @error('gambar') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
 
-            {{-- Card gambar di pojok kiri --}}
             <div class="d-flex justify-content-start mt-3">
                 <div class="card-gambar">
                     @if($produk->gambar)

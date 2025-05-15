@@ -12,7 +12,7 @@
         <h2 class="text-center mb-4 fw-bold text-uppercase text-dark">Kelola Produk Makanan Kucing</h2>
 
         <div class="top-controls">
-            <a href="{{ route('makanan-kucing.create') }}" class="btn-tambah">+ Tambah Produk</a>
+            <a href="{{ route('admin.makanan-kucing.create') }}" class="btn-tambah">+ Tambah Produk</a>
 
             <form action="#" method="GET" class="search-box">
                 <input type="text" id="searchInput" oninput="searchTable()" class="search-input" placeholder="Cari nama produk...">
@@ -47,8 +47,8 @@
                             @endif
                         </td>
                         <td>
-                            <a href="{{ route('makanan-kucing.edit', $p->id) }}" class="btn btn-sm btn-edit">Edit</a>
-                            <form action="{{ route('makanan-kucing.destroy', $p->id) }}" method="POST" style="display:inline;">
+                            <a href="{{ route('admin.makanan-kucing.edit', $p->id) }}" class="btn btn-sm btn-edit">Edit</a>
+                            <form action="{{ route('admin.makanan-kucing.destroy', $p->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-hapus" onclick="return confirm('Yakin ingin menghapus?')">Hapus</button>

@@ -4,78 +4,121 @@
 
 @section('content')
 @if(session('success'))
-    <div class="max-w-xl mx-auto mb-6">
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded text-sm">
-            {{ session('success') }}
-        </div>
+    <div class="alert alert-success text-center">
+        {{ session('success') }}
     </div>
 @endif
 
-<div class="max-w-4xl mx-auto bg-[#E5CBB7] rounded-3xl shadow-lg p-8 flex flex-col md:flex-row items-center gap-8">
-    <div class="w-full md:w-1/2">
-        <h2 class="text-3xl font-bold text-center mb-6">Edit Produk</h2>
+<style>
+    .form-wrapper {
+        background-color: #E5CBB7;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
 
-        <form action="{{ route('perlengkapan.update', $produk->id) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
-            @csrf
-            @method('PUT')
+    .form-wrapper h2 {
+        font-weight: bold;
+        margin-bottom: 30px;
+        text-align: center;
+    }
 
-            <div>
-                <label for="nama" class="block font-medium mb-1">Nama Produk</label>
-                <input type="text" name="nama" id="nama" value="{{ old('nama', $produk->nama) }}" required
-                       class="w-full px-4 py-2 border rounded-md bg-[#FFFCF0] focus:ring-orange-300 focus:outline-none">
-                @error('nama') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+    .btn-simpan {
+        background-color: #d9d9d9;
+        color: #000;
+        font-weight: 600;
+    }
+
+    .btn-simpan:hover {
+        background-color: #c6c6c6;
+    }
+
+    .card-gambar {
+        width: 150px;
+        height: 150px;
+        overflow: hidden;
+        border-radius: 10px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-gambar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .card-gambar .card-body {
+        padding: 10px;
+        text-align: center;
+    }
+</style>
+
+<div class="form-wrapper">
+    <h2>Edit Produk</h2>
+
+    <form action="{{ route('admin.perlengkapan.update', $produk->id) }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
+
+        {{-- Nama Produk --}}
+        <div class="mb-3">
+            <label for="nama" class="form-label">Nama Produk</label>
+            <input type="text" name="nama" id="nama" class="form-control" required
+                   value="{{ old('nama', $produk->nama) }}">
+            @error('nama') <small class="text-danger">{{ $message }}</small> @enderror
+        </div>
+
+        {{-- Stok --}}
+        <div class="mb-3">
+            <label for="stok" class="form-label">Stok</label>
+            <input type="number" name="stok" id="stok" class="form-control" required
+                   value="{{ old('stok', $produk->stok) }}">
+            @error('stok') <small class="text-danger">{{ $message }}</small> @enderror
+        </div>
+
+        {{-- Harga --}}
+        <div class="mb-3">
+            <label for="harga" class="form-label">Harga</label>
+            <input type="number" name="harga" id="harga" class="form-control" required
+                   value="{{ old('harga', $produk->harga) }}">
+            @error('harga') <small class="text-danger">{{ $message }}</small> @enderror
+        </div>
+
+        {{-- Deskripsi --}}
+        <div class="mb-3">
+            <label for="deskripsi" class="form-label">Deskripsi</label>
+            <textarea name="deskripsi" id="deskripsi" class="form-control" rows="3">{{ old('deskripsi', $produk->deskripsi) }}</textarea>
+            @error('deskripsi') <small class="text-danger">{{ $message }}</small> @enderror
+        </div>
+
+        {{-- Gambar Produk --}}
+        <div class="mb-3">
+            <label for="gambar" class="form-label">Gambar Produk</label>
+            <input type="file" name="gambar" id="gambar" class="form-control">
+            @error('gambar') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
+
+            <div class="d-flex justify-content-start mt-3">
+                <div class="card-gambar">
+                    @if($produk->gambar)
+                        <img src="{{ asset('storage/' . $produk->gambar) }}" alt="Gambar Produk">
+                    @else
+                        <div class="card-body text-muted d-flex justify-content-center align-items-center" style="height: 100%;">
+                            Belum ada gambar
+                        </div>
+                    @endif
+                </div>
             </div>
+        </div>
 
-            <div>
-                <label for="stok" class="block font-medium mb-1">Stok</label>
-                <input type="number" name="stok" id="stok" value="{{ old('stok', $produk->stok) }}" required
-                       class="w-full px-4 py-2 border rounded-md bg-[#FFFCF0] focus:ring-orange-300 focus:outline-none">
-                @error('stok') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label for="harga" class="block font-medium mb-1">Harga</label>
-                <input type="number" name="harga" id="harga" value="{{ old('harga', $produk->harga) }}" required
-                       class="w-full px-4 py-2 border rounded-md bg-[#FFFCF0] focus:ring-orange-300 focus:outline-none">
-                @error('harga') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label for="deskripsi" class="block font-medium mb-1">Deskripsi</label>
-                <textarea name="deskripsi" id="deskripsi" rows="4"
-                          class="w-full px-4 py-2 border rounded-md bg-[#FFFCF0] focus:ring-orange-300 focus:outline-none">{{ old('deskripsi', $produk->deskripsi) }}</textarea>
-                @error('deskripsi') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div>
-                <label for="gambar" class="block font-medium mb-1 text-gray-800">Gambar Produk</label>
-
-                @if($produk->gambar)
-                    <div class="w-fit mb-3">
-                        <img src="{{ asset('storage/' . $produk->gambar) }}" class="w-40 h-40 object-cover rounded shadow border" alt="Gambar Lama">
-                    </div>
-                @endif
-
-                <input type="file" name="gambar" id="gambar"
-                       class="block w-full file:mr-4 file:py-2 file:px-4
-                              file:rounded file:border-0
-                              file:bg-orange-300 file:text-black
-                              hover:file:bg-orange-400 bg-[#FFFCF0] border rounded-md">
-                <p class="text-sm text-gray-600 mt-1">Format: JPG, PNG, GIF (maks. 2MB)</p>
-                @error('gambar') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div class="text-center mt-6">
-                <button type="submit"
-                        class="bg-[#D9D9D9] text-black px-6 py-2 rounded-md font-semibold hover:bg-[#c6c6c6] transition">
-                    Simpan
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <div class="w-full md:w-1/2 text-center">
-        <img src="{{ asset('images/ilustrasi-kucing.png') }}" class="w-3/4 mx-auto" alt="Ilustrasi Kucing">
-    </div>
+        {{-- Tombol --}}
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-simpan px-4 py-2 rounded">Simpan</button>
+        </div>
+    </form>
 </div>
 @endsection

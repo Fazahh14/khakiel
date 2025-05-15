@@ -34,7 +34,7 @@ class AkunController extends Controller
 
         User::create($validated);
 
-        return redirect()->route('akun.index')->with('success', 'Akun berhasil ditambahkan.');
+        return redirect()->route('admin.akun.index')->with('success', 'Akun berhasil ditambahkan.');
     }
 
     public function edit($id)
@@ -64,12 +64,12 @@ class AkunController extends Controller
 
         $akun->save();
 
-        return redirect()->route('akun.index')->with('success', 'Akun berhasil diperbarui!');
+        return redirect()->route('admin.akun.index')->with('success', 'Akun berhasil diperbarui!');
     }
 
     public function destroy($id)
     {
         User::findOrFail($id)->delete();
-        return redirect()->route('akun.index')->with('success', 'Akun berhasil dihapus.');
+        return redirect()->route('admin.akun.index')->with('success', 'Akun berhasil dihapus.');
     }
 }

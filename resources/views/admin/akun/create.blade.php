@@ -11,7 +11,7 @@
     <div class="card custom-card shadow p-4 w-100" style="max-width: 900px;">
         <h2 class="text-center fw-bold mb-4">Tambah Akun</h2>
 
-        <form action="{{ route('akun.store') }}" method="POST">
+        <form action="{{ route('admin.akun.store') }}" method="POST">
             @csrf
 
             {{-- Nama --}}

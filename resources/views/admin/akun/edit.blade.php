@@ -19,7 +19,7 @@
     <div class="form-section mx-auto">
         <h2 class="text-center fw-bold mb-4">Edit Akun</h2>
 
-        <form action="{{ route('akun.update', $akun->id) }}" method="POST">
+        <form action="{{ route('admin.akun.update', $akun->id) }}" method="POST">
             @csrf
             @method('PUT')
 

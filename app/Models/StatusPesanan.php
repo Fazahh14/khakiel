@@ -6,11 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class StatusPesanan extends Model
 {
-    protected $fillable = [
-        'nama_pemesan',
-        'nama_produk',
-        'tanggal_pesanan',
-        'status_pesanan',
-        'harga',
-    ];
+    protected $fillable = ['transaksi_id', 'status_pesanan'];
+
+    public function transaksi()
+    {
+        return $this->belongsTo(Transaksi::class);
+    }
 }

@@ -23,7 +23,7 @@
 <div class="form-wrapper">
     <h2 class="text-center mb-4 fw-bold">Tambah Produk</h2>
 
-    <form action="{{ route('makanan-kucing.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.makanan-kucing.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         {{-- Nama Produk --}}

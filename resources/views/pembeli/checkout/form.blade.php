@@ -2,83 +2,66 @@
 
 @section('title', 'Checkout')
 
-@section('content')
+@push('styles')
 <style>
-    .form-label {
-        min-width: 130px;
-        display: inline-block;
-        font-weight: 500;
-        color: #333;
+    body {
+        background-color: #f9f9f9;
     }
 
-    .input-group {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .btn-pesan {
-        background-color: #ffffff;
-        border: 1px solid #ccc;
-        color: #333;
-        padding: 10px 24px;
-        font-weight: 600;
-        border-radius: 6px;
-        transition: 0.3s;
-    }
-
-    .btn-pesan:hover {
-        background-color: #f3f3f3;
-    }
-
-    .form-wrapper {
-        background-color: #E5CBB7;
-        padding: 24px;
-        border-radius: 10px;
-        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
-        max-width: 600px;
+    .checkout-wrapper {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        padding: 40px;
+        max-width: 700px;
         margin: 0 auto;
     }
-</style>
 
-<div class="py-12 px-4">
-    <div class="form-wrapper">
-        <h2 class="text-center text-md font-semibold mb-6">Silakan isi form pemesanan terlebih dahulu</h2>
+    .btn-checkout {
+        background-color: #198754;
+        color: white;
+        font-weight: 600;
+        padding: 10px 24px;
+        border-radius: 8px;
+        border: none;
+    }
+
+    .btn-checkout:hover {
+        background-color: #146c43;
+    }
+</style>
+@endpush
+
+@section('content')
+<div class="container py-5 px-3">
+    <div class="checkout-wrapper">
+        <h2 class="text-center mb-4">Formulir Pemesanan</h2>
 
         @if(session('error'))
-            <div class="bg-red-100 text-red-700 p-3 rounded mb-4">
-                {{ session('error') }}
-            </div>
+            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
-        <form method="POST" action="{{ route('checkout.process') }}" class="space-y-4">
+        <form method="POST" action="{{ route('checkout.process') }}">
             @csrf
 
-            {{-- Nama --}}
-            <div class="input-group">
+            <div class="mb-3">
                 <label for="nama" class="form-label">Nama Pemesan</label>
-                <input type="text" name="nama" id="nama" required
-                    class="w-full border px-3 py-1.5 rounded bg-white text-sm focus:outline-none">
+                <input type="text" name="nama" class="form-control" required>
             </div>
 
-            {{-- Alamat --}}
-            <div class="input-group">
+            <div class="mb-3">
                 <label for="alamat" class="form-label">Alamat Pemesan</label>
-                <input type="text" name="alamat" id="alamat" required
-                    class="w-full border px-3 py-1.5 rounded bg-white text-sm focus:outline-none">
+                <input type="text" name="alamat" class="form-control" required>
             </div>
 
-            {{-- Telepon --}}
-            <div class="input-group">
+            <div class="mb-3">
                 <label for="telepon" class="form-label">No Telepon</label>
-                <input type="text" name="telepon" id="telepon" required
-                    class="w-full border px-3 py-1.5 rounded bg-white text-sm focus:outline-none">
+                <input type="text" name="telepon" class="form-control" required>
             </div>
 
-            {{-- Metode Pembayaran --}}
-            <div class="input-group">
+            <div class="mb-3">
                 <label for="metode" class="form-label">Metode Pembayaran</label>
-                <select name="metode" id="metode" required class="w-full border px-3 py-1.5 rounded bg-white text-sm">
+                <select name="metode" class="form-select" required>
                     <option value="">-- Pilih Metode --</option>
                     <option value="midtrans">Midtrans (VA/Qris)</option>
                     <option value="cod">COD</option>
@@ -86,23 +69,19 @@
                 </select>
             </div>
 
-            {{-- Tanggal --}}
-            <div class="input-group">
-                <label class="form-label">Tanggal Pesanan</label>
-                <input type="text" name="tanggal_pesanan" value="{{ now()->format('Y-m-d') }}" readonly
-                    class="w-full border px-3 py-1.5 rounded bg-gray-100 text-sm text-gray-700">
+            <div class="mb-3">
+                <label class="form-label">Tanggal Pemesanan</label>
+                <input type="text" class="form-control bg-light" value="{{ now()->format('Y-m-d') }}" readonly>
             </div>
 
-            {{-- Total --}}
-            @if($produk)
-                <input type="hidden" name="total" value="{{ $produk['harga'] * $produk['jumlah'] }}">
-            @else
-                <input type="hidden" name="total" value="10000"> {{-- fallback default --}}
-            @endif
+            @foreach($produk as $item)
+                <input type="hidden" name="produk[]" value="{{ json_encode($item) }}">
+            @endforeach
 
-            {{-- Tombol --}}
-            <div class="text-center mt-6">
-                <button type="submit" class="btn-pesan">
+            <input type="hidden" name="total" value="{{ $total }}">
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn-checkout">
                     Pesan Sekarang
                 </button>
             </div>
