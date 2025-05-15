@@ -21,6 +21,11 @@ body {
     min-height: 100vh;
 }
 
+.text-active {
+    color: #BCAFA5 !important;
+    text-decoration: underline;
+}
+
 main {
     flex: 1;
 }

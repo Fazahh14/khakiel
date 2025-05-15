@@ -63,8 +63,8 @@
                             <img src="{{ asset('svg/people.svg') }}" width="34" alt="User">
                         </button>
                         <div x-show="open" @click.away="open = false" x-transition
-                             class="position-absolute end-0 mt-2 bg-white border rounded shadow-sm p-2"
-                             style="min-width: 180px; z-index: 1000;">
+                            class="position-absolute end-0 mt-2 bg-white border rounded shadow-sm p-2"
+                            style="min-width: 180px; z-index: 1000;">
                             <div class="px-2 py-1 text-muted small border-bottom">{{ Auth::user()->email }}</div>
                             <form action="{{ route('logout') }}" method="POST" class="m-0">
                                 @csrf
@@ -106,10 +106,9 @@
     {{-- Navbar --}}
     <nav class="bg-krem py-2">
         <div class="container d-flex justify-content-center align-items-center gap-4 flex-nowrap fw-semibold flex-md-row flex-column text-center">
-            <a href="{{ route('pembeli.blog.index') }}" class="text-decoration-none text-dark">Blog</a>
-            <a href="{{ route('pembeli.informasipesanan.index') }}" class="text-decoration-none text-dark">Status Pesanan</a>
-            <a href="#" class="text-decoration-none text-dark">Notifikasi Pembayaran</a>
-
+            <a href="{{ route('pembeli.blog.index') }}" class="nav-link {{ request()->routeIs('pembeli.blog*') ? 'fw-semibold text-active' : 'text-dark' }}">Blog</a>
+            <a href="{{ route('pembeli.informasipesanan.index') }}" class="nav-link {{ request()->is('informasi-pesanan*') ? 'fw-semibold text-active' : 'text-dark' }}">Status Pesanan</a>
+            
             {{-- Dropdown Kategori --}}
             @php
                 $kategori = match(request('kategori')) {
@@ -154,7 +153,7 @@
             </div>
             <div class="mt-3 text-start ps-2">
                 <a href="https://api.whatsapp.com/send?phone=6287717649173" target="_blank"
-                   class="text-decoration-none d-inline-flex align-items-center gap-2 fw-semibold text-dark">
+                class="text-decoration-none d-inline-flex align-items-center gap-2 fw-semibold text-dark">
                     <img src="{{ asset('svg/whatsapp.svg') }}" width="20" height="20" alt="WhatsApp">
                     <span>WhatsApp | 087-717-649-173</span>
                 </a>

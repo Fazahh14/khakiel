@@ -65,7 +65,6 @@
                     <option value="">-- Pilih Metode --</option>
                     <option value="midtrans">Midtrans (VA/Qris)</option>
                     <option value="cod">COD</option>
-                    <option value="dana">Dana</option>
                 </select>
             </div>
 
