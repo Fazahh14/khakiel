@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Pembayaran</title>
+    <title>Proses Pembayaran</title>
     <script src="https://app.sandbox.midtrans.com/snap/snap.js"
             data-client-key="{{ config('midtrans.client_key') }}"></script>
 </head>
@@ -12,30 +12,18 @@
         window.snap.pay('{{ $snapToken }}', {
             onSuccess: function () {
                 alert('Pembayaran berhasil!');
-                @if($source === 'detail' && $produkId)
-                    window.location.href = "{{ route('pembeli.produk.show', ['id' => $produkId]) }}";
-                @else
-                    window.location.href = "{{ route('pembeli.produk.index') }}";
-                @endif
+                window.location.href = "{{ route('pembeli.produk.index') }}";
             },
             onPending: function () {
-                alert('Menunggu pembayaran...');
-                @if($source === 'detail' && $produkId)
-                    window.location.href = "{{ route('pembeli.produk.show', ['id' => $produkId]) }}";
-                @else
-                    window.location.href = "{{ route('pembeli.produk.index') }}";
-                @endif
+                alert('Pembayaran pending.');
+                window.location.href = "{{ route('pembeli.produk.index') }}";
             },
             onError: function () {
                 alert('Pembayaran gagal!');
-                @if($source === 'detail' && $produkId)
-                    window.location.href = "{{ route('pembeli.produk.show', ['id' => $produkId]) }}";
-                @else
-                    window.location.href = "{{ route('pembeli.produk.index') }}";
-                @endif
+                window.location.href = "{{ route('pembeli.produk.index') }}";
             },
             onClose: function () {
-                alert('Transaksi dibatalkan.');
+                alert('Transaksi dibatalkan oleh pengguna.');
             }
         });
     }
