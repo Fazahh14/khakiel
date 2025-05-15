@@ -124,3 +124,8 @@ footer .footer-info h5 {
         gap: 0.8rem;
     }
 }
+
+.text-active {
+    color: #BCAFA5 !important; 
+    text-decoration: underline;
+}
