@@ -111,3 +111,4 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', RedirectIfNotSeller:
 // Fallback Route
 // =============================
 Route::fallback(fn () => redirect()->route('pembeli.produk.index'));
+Route::post('/admin/statuspesanan/{id}/kirim-wa', [KelolaStatusPesananController::class, 'kirimWa'])->name('admin.kelolastatuspesanan.kirimwa');

@@ -3,24 +3,20 @@
 @section('title', 'Kelola Status Pesanan')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/admin/statuspesanan/index.css') }}">
 <style>
     .btn-simpan {
         background-color: #198754;
         color: white;
         border: none;
     }
-
     .btn-simpan:hover {
         background-color: #157347;
     }
-
     .btn-hapus {
         background-color: #dc3545;
         color: white;
         border: none;
     }
-
     .btn-hapus:hover {
         background-color: #bb2d3b;
     }
@@ -32,8 +28,18 @@
     <div class="card p-4">
         <h2 class="text-center mb-4 fw-bold text-uppercase text-dark">Kelola Status Pesanan</h2>
 
+        {{-- Alert sukses --}}
         @if(session('success'))
-            <div class="alert alert-success text-center">{{ session('success') }}</div>
+            <div class="alert alert-success text-center" role="alert" id="flash-message">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        {{-- Alert error --}}
+        @if(session('error'))
+            <div class="alert alert-danger text-center" role="alert" id="flash-message">
+                {{ session('error') }}
+            </div>
         @endif
 
         <div class="table-responsive">
@@ -45,6 +51,8 @@
                         <th>Alamat</th>
                         <th>Telepon</th>
                         <th>Tanggal Pesanan</th>
+                        <th>Nama Produk</th>
+                        <th>Qty</th>
                         <th>Total</th>
                         <th>Status</th>
                         <th>Aksi</th>
@@ -57,31 +65,52 @@
                         <td>{{ $transaksi->nama }}</td>
                         <td>{{ $transaksi->alamat }}</td>
                         <td>{{ $transaksi->telepon }}</td>
-                        <td>{{ $transaksi->tanggal_pesanan }}</td>
+                        <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y H:i') }}</td>
+                        
+                        <td>
+                            @foreach($transaksi->items as $item)
+                                <div>{{ $item->produk->nama }}</div>
+                            @endforeach
+                        </td>
+                        <td>
+                            @foreach($transaksi->items as $item)
+                                <div>{{ $item->qty }}</div>
+                            @endforeach
+                        </td>
+
                         <td>Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
                         <td>
-                            <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST" class="d-flex gap-2 justify-content-center align-items-center">
+                            <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST" class="d-flex justify-content-center align-items-center">
                                 @csrf
                                 @method('PUT')
                                 <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" required>
-                                    <option value="pending" {{ $transaksi->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="belum diproses" {{ $transaksi->status == 'belum diproses' ? 'selected' : '' }}>Belum Diproses</option>
-                                    <option value="sedang diproses" {{ $transaksi->status == 'sedang diproses' ? 'selected' : '' }}>Sedang Diproses</option>
-                                    <option value="selesai" {{ $transaksi->status == 'selesai' ? 'selected' : '' }}>Selesai</option>
+                                    @php
+                                        $statuses = ['pending', 'belum diproses', 'sedang diproses', 'selesai'];
+                                    @endphp
+                                    @foreach($statuses as $status)
+                                        <option value="{{ $status }}" {{ $transaksi->status == $status ? 'selected' : '' }}>
+                                            {{ ucfirst($status) }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </form>
                         </td>
                         <td>
-                            <form action="{{ route('admin.kelolastatuspesanan.destroy', $transaksi->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pesanan ini?')">
+                            <form action="{{ route('admin.kelolastatuspesanan.destroy', $transaksi->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pesanan ini?')" style="display:inline-block;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-hapus">Hapus</button>
+                            </form>
+
+                            <form action="{{ route('admin.kelolastatuspesanan.kirimwa', $transaksi->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Kirim pesan WhatsApp ke {{ $transaksi->nama }}?')">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-success ms-1">Kirim WA</button>
                             </form>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-muted">Belum ada data pesanan.</td>
+                        <td colspan="10" class="text-muted">Belum ada data pesanan.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -90,9 +119,9 @@
 
         {{-- Pagination --}}
         @if($transaksis->hasPages())
-        <div class="d-flex justify-content-end mt-4">
-            {{ $transaksis->onEachSide(1)->links() }}
-        </div>
+            <div class="d-flex justify-content-end mt-4">
+                {{ $transaksis->onEachSide(1)->links() }}
+            </div>
         @endif
     </div>
 </div>
@@ -101,9 +130,13 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const alert = document.querySelector('.alert-success');
-        if (alert) {
-            setTimeout(() => alert.remove(), 4000);
+        const flash = document.getElementById('flash-message');
+        if (flash) {
+            setTimeout(() => {
+                flash.style.transition = 'opacity 0.5s ease';
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 500);
+            }, 4000);
         }
     });
 </script>

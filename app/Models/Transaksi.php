@@ -14,6 +14,8 @@ class Transaksi extends Model
         'alamat',
         'telepon',
         'tanggal_pesanan',
+        'nama_produk',
+        'qty',
         'total',
         'status',
         'metode',

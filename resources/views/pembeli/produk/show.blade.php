@@ -100,20 +100,31 @@
                 <strong>Kategori:</strong> {{ ucfirst($produk->kategori) }}
             </p>
             <p class="fs-4 text-primary fw-semibold mb-4">
-                Rp {{ number_format($produk->harga, 0, ',', '.') }}
+                Rp <span id="harga-satuan">{{ number_format($produk->harga, 0, ',', '.') }}</span>
             </p>
+
+            {{-- Input Jumlah dan Total --}}
+            <div class="mb-4">
+                <label for="qty" class="form-label fw-semibold">Jumlah:</label>
+                <input type="number" id="qty" name="jumlah" class="form-control w-25" value="1" min="1" max="{{ $produk->stok }}">
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Total Harga:</label>
+                <p class="fs-5 text-success fw-bold">Rp <span id="total-harga">{{ number_format($produk->harga, 0, ',', '.') }}</span></p>
+            </div>
 
             {{-- Tombol --}}
             <div class="d-flex flex-wrap gap-4 btn-wrapper">
 
                 {{-- Tombol Pesan Sekarang --}}
-                <form action="{{ route('checkout.storeProduk') }}" method="POST">
+                <form id="form-beli" action="{{ route('checkout.storeProduk') }}" method="POST">
                     @csrf
                     <input type="hidden" name="langsung_beli" value="true">
                     <input type="hidden" name="produk[{{ $produk->id }}][id]" value="{{ $produk->id }}">
                     <input type="hidden" name="produk[{{ $produk->id }}][nama]" value="{{ $produk->nama }}">
                     <input type="hidden" name="produk[{{ $produk->id }}][harga]" value="{{ $produk->harga }}">
-                    <input type="hidden" name="produk[{{ $produk->id }}][jumlah]" value="1">
+                    <input type="hidden" name="produk[{{ $produk->id }}][jumlah]" id="form-beli-jumlah" value="1">
+                    <input type="hidden" name="produk[{{ $produk->id }}][total]" id="form-beli-total" value="{{ $produk->harga }}">
                     <input type="hidden" name="produk[{{ $produk->id }}][gambar]" value="{{ $produk->gambar ?? 'default.png' }}">
                     <input type="hidden" name="produk[{{ $produk->id }}][check]" value="1">
 
@@ -123,12 +134,13 @@
                 </form>
 
                 {{-- Tombol Tambah ke Keranjang --}}
-                <form action="{{ route('keranjang.store') }}" method="POST">
+                <form id="form-keranjang" action="{{ route('keranjang.store') }}" method="POST">
                     @csrf
                     <input type="hidden" name="id" value="{{ $produk->id }}">
                     <input type="hidden" name="nama" value="{{ $produk->nama }}">
                     <input type="hidden" name="harga" value="{{ $produk->harga }}">
-                    <input type="hidden" name="jumlah" value="1">
+                    <input type="hidden" name="jumlah" id="form-keranjang-jumlah" value="1">
+                    <input type="hidden" name="total" id="form-keranjang-total" value="{{ $produk->harga }}">
                     <input type="hidden" name="gambar" value="{{ $produk->gambar ?? 'default.png' }}">
 
                     <button type="submit" class="btn btn-khaki rounded-pill d-flex align-items-center gap-2">
@@ -181,5 +193,26 @@
         <p>{!! nl2br(e($produk->deskripsi ?? 'Tidak ada deskripsi tersedia.')) !!}</p>
     </div>
 </div>
+
+<script>
+    const qtyInput = document.getElementById('qty');
+    const totalHargaDisplay = document.getElementById('total-harga');
+    const hargaSatuan = {{ $produk->harga }};
+    const formBeliJumlah = document.getElementById('form-beli-jumlah');
+    const formBeliTotal = document.getElementById('form-beli-total');
+    const formKeranjangJumlah = document.getElementById('form-keranjang-jumlah');
+    const formKeranjangTotal = document.getElementById('form-keranjang-total');
+
+    qtyInput.addEventListener('input', function () {
+        let qty = parseInt(this.value) || 1;
+        let total = qty * hargaSatuan;
+
+        totalHargaDisplay.textContent = total.toLocaleString('id-ID');
+        formBeliJumlah.value = qty;
+        formBeliTotal.value = total;
+        formKeranjangJumlah.value = qty;
+        formKeranjangTotal.value = total;
+    });
+</script>
 
 @endsection

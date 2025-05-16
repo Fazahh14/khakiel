@@ -5,21 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Transaksi;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class KelolaStatusPesananController extends Controller
 {
-    /**
-     * Menampilkan semua status pesanan.
-     */
     public function index()
     {
-        $transaksis = Transaksi::orderBy('id', 'asc')->paginate(25);
+        $transaksis = Transaksi::with('items.produk')->orderBy('id', 'asc')->paginate(25);
         return view('admin.statuspesanan.index', compact('transaksis'));
     }
 
-    /**
-     * Memperbarui status pesanan.
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -35,9 +31,47 @@ class KelolaStatusPesananController extends Controller
                          ->with('success', 'Status pesanan berhasil diperbarui.');
     }
 
-    /**
-     * Menghapus pesanan.
-     */
+public function kirimwa($id)
+{
+    $transaksi = Transaksi::with('items.produk')->findOrFail($id);
+
+    if (!$transaksi->telepon) {
+        return back()->with('error', 'Nomor telepon pelanggan tidak tersedia.');
+    }
+
+    $no = preg_replace('/[^0-9]/', '', $transaksi->telepon);
+    if (substr($no, 0, 1) == '0') {
+        $no = '62' . substr($no, 1);
+    }
+
+    $pesan = "Halo {$transaksi->nama}, pesanan Anda:\n";
+    foreach ($transaksi->items as $item) {
+        $pesan .= "- {$item->produk->nama} (qty: {$item->qty})\n";
+    }
+    $pesan .= "Total: Rp " . number_format($transaksi->total, 0, ',', '.') . "\n";
+    $pesan .= "Status: {$transaksi->status}\n";
+    $pesan .= "Terima kasih sudah berbelanja.";
+
+    try {
+        $response = Http::withHeaders([
+            'Authorization' => 'suizRXTkDa7FMcqYPjkL' // contoh token sesuai Fonnte docs
+        ])->asForm()->post(env('FONNTE_API_URL') . '/send', [
+            'target' => $no,
+            'message' => $pesan,
+            'countryCode' => '62',
+        ]);
+
+        if ($response->successful()) {
+            return back()->with('success', 'Pesan WhatsApp berhasil dikirim.');
+        } else {
+            return back()->with('error', 'Gagal mengirim pesan WhatsApp: ' . $response->body());
+        }
+    } catch (\Exception $e) {
+        return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+    }
+}
+
+
     public function destroy($id)
     {
         $transaksi = Transaksi::findOrFail($id);

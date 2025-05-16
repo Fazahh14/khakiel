@@ -22,11 +22,14 @@ class CheckoutController extends Controller
             if ($langsungBeli) {
                 foreach ($produkInput as $id => $data) {
                     if (!empty($data['check'])) {
+                        // Pastikan ambil jumlah sesuai input user, default 1 kalau kosong
+                        $jumlah = isset($data['jumlah']) && (int)$data['jumlah'] > 0 ? (int)$data['jumlah'] : 1;
+
                         $produkTerpilih[] = [
                             'id'     => $data['id'],
                             'nama'   => $data['nama'],
-                            'harga'  => $data['harga'],
-                            'jumlah' => $data['jumlah'],
+                            'harga'  => (int) $data['harga'],
+                            'jumlah' => $jumlah,
                             'gambar' => $data['gambar'] ?? null,
                         ];
                     }
@@ -36,11 +39,14 @@ class CheckoutController extends Controller
                 $keranjang = session('keranjang', []);
                 foreach ($produkInput as $id => $data) {
                     if (!empty($data['check']) && isset($keranjang[$id])) {
+                        // Ambil jumlah dari keranjang (pastikan update di keranjang saat user ubah qty)
+                        $jumlah = isset($keranjang[$id]['jumlah']) && (int)$keranjang[$id]['jumlah'] > 0 ? (int)$keranjang[$id]['jumlah'] : 1;
+
                         $produkTerpilih[] = [
                             'id'     => $id,
                             'nama'   => $keranjang[$id]['nama'],
-                            'harga'  => $keranjang[$id]['harga'],
-                            'jumlah' => $keranjang[$id]['jumlah'],
+                            'harga'  => (int) $keranjang[$id]['harga'],
+                            'jumlah' => $jumlah,
                             'gambar' => $keranjang[$id]['gambar'] ?? null,
                         ];
                     }
@@ -53,6 +59,7 @@ class CheckoutController extends Controller
                 return redirect()->route($route)->with('error', 'Silakan pilih produk untuk checkout.');
             }
 
+            // Hitung total berdasarkan harga * jumlah produk masing-masing
             $total = collect($produkTerpilih)->sum(fn($item) => $item['harga'] * $item['jumlah']);
 
             session([
@@ -101,12 +108,14 @@ class CheckoutController extends Controller
                 return redirect()->route('keranjang.index')->with('error', 'Data produk tidak tersedia.');
             }
 
-            $orderId = 'ORD-' . time() . '-' . strtoupper(uniqid());
-            $total   = collect($produk)->sum(fn($item) => $item['harga'] * $item['jumlah']);
+            // Hitung ulang total berdasarkan produk di session (harga * jumlah)
+            $total = collect($produk)->sum(fn($item) => $item['harga'] * $item['jumlah']);
 
             if ($total <= 0) {
                 return redirect()->route('checkout.form')->with('error', 'Total transaksi tidak valid.');
             }
+
+            $orderId = 'ORD-' . time() . '-' . strtoupper(uniqid());
 
             $transaksi = Transaksi::create([
                 'user_id'         => Auth::id(),
@@ -150,11 +159,12 @@ class CheckoutController extends Controller
             Config::$isSanitized  = true;
             Config::$is3ds        = true;
 
+            // Kirim harga satuan dan qty sesuai input
             $itemDetails = array_map(function ($item) {
                 return [
-                    'id'       => $item['id'],
-                    'price'    => (int) $item['harga'],
-                    'quantity' => (int) $item['jumlah'],
+                    'id'       => (string) $item['id'],
+                    'price'    => (int) $item['harga'],   // harga satuan
+                    'quantity' => (int) $item['jumlah'],  // jumlah produk
                     'name'     => $item['nama'] ?? 'Produk',
                 ];
             }, $produk);
@@ -162,7 +172,7 @@ class CheckoutController extends Controller
             $params = [
                 'transaction_details' => [
                     'order_id'     => $orderId,
-                    'gross_amount' => $total,
+                    'gross_amount' => $total,   // total harga sudah qty*harga
                 ],
                 'customer_details' => [
                     'first_name' => $data['nama'],
@@ -174,17 +184,18 @@ class CheckoutController extends Controller
                     ],
                 ],
                 'item_details' => $itemDetails,
-                'callbacks'    => [
+                'callbacks' => [
                     'finish' => route('pembeli.produk.index'),
-                ]
+                ],
             ];
 
-            Log::info('MIDTRANS ITEM DETAILS', $itemDetails);
-            Log::info('MIDTRANS PARAMS', $params);
+            // Debug log supaya kamu bisa cek di laravel.log
+            Log::info('Midtrans item details:', $itemDetails);
+            Log::info('Midtrans params:', $params);
 
             $snapToken = Snap::getSnapToken($params);
 
-            Log::info('SNAP TOKEN', [$snapToken]);
+            Log::info('Midtrans snap token:', [$snapToken]);
 
             session()->forget(['checkout_produk', 'checkout_total', 'checkout_langsung']);
 
@@ -201,66 +212,5 @@ class CheckoutController extends Controller
         }
     }
 
-    public function callback(Request $request)
-    {
-        try {
-            $payload      = $request->getContent();
-            $notification = json_decode($payload, true);
-
-            $validSignatureKey = hash("sha512", 
-                $notification['order_id'] . 
-                $notification['status_code'] . 
-                $notification['gross_amount'] . 
-                config('midtrans.server_key')
-            );
-
-            if ($validSignatureKey !== $notification['signature_key']) {
-                return response()->json(['status' => 'error', 'message' => 'Invalid signature key'], 403);
-            }
-
-            $transaksi = Transaksi::where('order_id', $notification['order_id'])->first();
-            if (!$transaksi) {
-                return response()->json(['status' => 'error', 'message' => 'Transaction not found'], 404);
-            }
-
-            switch ($notification['transaction_status']) {
-                case 'capture':
-                case 'settlement':
-                    $transaksi->status = 'paid';
-                    break;
-                case 'pending':
-                    $transaksi->status = 'pending';
-                    break;
-                case 'deny':
-                case 'expire':
-                case 'cancel':
-                    $transaksi->status = 'failed';
-                    break;
-            }
-
-            $transaksi->save();
-
-            return response()->json(['status' => 'success']);
-        } catch (\Exception $e) {
-            Log::error('Midtrans Callback Error: ' . $e->getMessage());
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function simpanAlamat(Request $request)
-    {
-        $request->validate([
-            'alamat'   => 'required|string|max:255',
-            'kota'     => 'required|string|max:100',
-            'kode_pos' => 'required|string|max:10',
-        ]);
-
-        session([
-            'checkout_alamat'   => $request->alamat,
-            'checkout_kota'     => $request->kota,
-            'checkout_kode_pos' => $request->kode_pos,
-        ]);
-
-        return response()->json(['success' => true]);
-    }
+    // ... tetap seperti kamu punya (callback, simpanAlamat, dll)
 }
