@@ -64,7 +64,6 @@
                 <select name="metode" class="form-select" required>
                     <option value="">-- Pilih Metode --</option>
                     <option value="midtrans">Midtrans (VA/Qris)</option>
-                    <option value="cod">COD</option>
                 </select>
             </div>
 

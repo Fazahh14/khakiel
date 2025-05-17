@@ -14,10 +14,9 @@ class Transaksi extends Model
         'alamat',
         'telepon',
         'tanggal_pesanan',
-        'nama_produk',
-        'qty',
         'total',
         'status',
+        'status_pembayaran',
         'metode',
     ];
 
@@ -26,7 +25,6 @@ class Transaksi extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke item transaksi jika kamu ingin menambahkan banyak produk
     public function items()
     {
         return $this->hasMany(TransaksiItem::class);

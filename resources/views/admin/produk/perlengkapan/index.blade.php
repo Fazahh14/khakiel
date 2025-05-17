@@ -11,10 +11,18 @@
     <div class="card">
         <h2 class="text-center mb-4 fw-bold text-uppercase text-dark">Kelola Produk Perlengkapan</h2>
 
+        {{-- ALERT NOTIFIKASI --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show mx-3" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="top-controls">
             <a href="{{ route('admin.perlengkapan.create') }}" class="btn-tambah">+ Tambah Produk</a>
 
-            <form action="#" method="GET" class="search-box">
+            <form action="#" method="GET" class="search-box" onsubmit="return false;">
                 <input type="text" id="searchInput" oninput="searchTable()" class="search-input" placeholder="Cari nama produk...">
                 <i class="bi bi-search"></i>
             </form>
@@ -56,7 +64,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
+                    <tr id="emptyRow">
                         <td colspan="6" class="text-muted">Belum ada produk.</td>
                     </tr>
                     @endforelse
@@ -70,13 +78,42 @@
 <script>
     function searchTable() {
         const input = document.getElementById("searchInput").value.toLowerCase();
-        const rows = document.querySelectorAll("#produkTable tbody tr");
+        const tableBody = document.querySelector("#produkTable tbody");
+        const rows = tableBody.querySelectorAll("tr:not(#emptyRow):not(#noResultRow)");
+
+        let visibleCount = 0;
 
         rows.forEach(row => {
             const nama = row.cells[1].textContent.toLowerCase();
-            row.style.display = nama.includes(input) ? "" : "none";
+            if (nama.includes(input)) {
+                row.style.display = "";
+                visibleCount++;
+            } else {
+                row.style.display = "none";
+            }
         });
+
+        const emptyRow = document.getElementById("emptyRow");
+        if (emptyRow) {
+            emptyRow.style.display = visibleCount === 0 && input === '' ? '' : 'none';
+        }
+
+        let noResultRow = document.getElementById("noResultRow");
+        if (visibleCount === 0 && input !== '') {
+            if (!noResultRow) {
+                noResultRow = document.createElement("tr");
+                noResultRow.id = "noResultRow";
+                noResultRow.innerHTML = `<td colspan="6" class="text-muted fst-italic">Produk tidak ditemukan.</td>`;
+                tableBody.appendChild(noResultRow);
+            }
+            noResultRow.style.display = "";
+        } else {
+            if (noResultRow) {
+                noResultRow.style.display = "none";
+            }
+        }
     }
 </script>
 @endpush
+
 @endsection
