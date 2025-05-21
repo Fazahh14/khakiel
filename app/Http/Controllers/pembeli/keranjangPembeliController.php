@@ -4,80 +4,84 @@ namespace App\Http\Controllers\Pembeli;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Keranjang;
+use Illuminate\Support\Facades\Auth;
+
 
 class KeranjangPembeliController extends Controller
 {
-    public function index()
-    {
-        $keranjang = session('keranjang', []);
+   public function index()
+{
+    $keranjang = Keranjang::where('user_id', Auth::id())->get();
 
-        $total = collect($keranjang)->reduce(function ($carry, $item) {
-            return $carry + ($item['harga'] * $item['jumlah']);
-        }, 0);
+    $total = $keranjang->sum(function ($item) {
+        return $item->harga * $item->jumlah;
+    });
 
-        return view('pembeli.keranjangBelanja.index', compact('keranjang', 'total'));
-    }
+    return view('pembeli.keranjangBelanja.index', compact('keranjang', 'total'));
+}
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'id' => 'required|integer',
-            'nama' => 'required|string',
-            'harga' => 'required|numeric',
-            'jumlah' => 'required|integer|min:1',
-            'gambar' => 'nullable|string',
+{
+    $validated = $request->validate([
+        'id' => 'required|integer',
+        'nama' => 'required|string',
+        'harga' => 'required|numeric',
+        'jumlah' => 'required|integer|min:1',
+        'gambar' => 'nullable|string',
+    ]);
+
+    $keranjang = Keranjang::where('user_id', Auth::id())
+        ->where('produk_id', $validated['id'])
+        ->first();
+
+    if ($keranjang) {
+        $keranjang->jumlah += $validated['jumlah'];
+        $keranjang->save();
+    } else {
+        Keranjang::create([
+            'user_id' => Auth::id(),
+            'produk_id' => $validated['id'],
+            'nama' => $validated['nama'],
+            'harga' => $validated['harga'],
+            'jumlah' => $validated['jumlah'],
+            'gambar' => $validated['gambar'],
         ]);
-
-        $keranjang = session()->get('keranjang', []);
-
-        if (isset($keranjang[$validated['id']])) {
-            $keranjang[$validated['id']]['jumlah'] += $validated['jumlah'];
-        } else {
-            $keranjang[$validated['id']] = [
-                'nama' => $validated['nama'],
-                'harga' => $validated['harga'],
-                'jumlah' => $validated['jumlah'],
-                'gambar' => $validated['gambar'] ?? null,
-            ];
-        }
-
-        session()->put('keranjang', $keranjang);
-
-        return redirect()->route('keranjang.index')->with('success', 'Produk berhasil ditambahkan ke keranjang.');
     }
+
+    return redirect()->route('keranjang.index')->with('success', 'Produk berhasil ditambahkan ke keranjang.');
+}
 
     public function tambah($id)
-    {
-        $keranjang = session('keranjang', []);
-        if (isset($keranjang[$id])) {
-            $keranjang[$id]['jumlah']++;
-            session()->put('keranjang', $keranjang);
-        }
-        return redirect()->route('keranjang.index');
+{
+    $item = Keranjang::where('user_id', Auth::id())->where('id', $id)->first();
+    if ($item) {
+        $item->jumlah++;
+        $item->save();
     }
+    return redirect()->route('keranjang.index');
+}
 
-    public function kurang($id)
-    {
-        $keranjang = session('keranjang', []);
-        if (isset($keranjang[$id])) {
-            $keranjang[$id]['jumlah']--;
-            if ($keranjang[$id]['jumlah'] <= 0) {
-                unset($keranjang[$id]);
-            }
-            session()->put('keranjang', $keranjang);
+public function kurang($id)
+{
+    $item = Keranjang::where('user_id', Auth::id())->where('id', $id)->first();
+    if ($item) {
+        $item->jumlah--;
+        if ($item->jumlah <= 0) {
+            $item->delete();
+        } else {
+            $item->save();
         }
-        return redirect()->route('keranjang.index');
     }
+    return redirect()->route('keranjang.index');
+}
+
 
     public function hapus($id)
-    {
-        $keranjang = session('keranjang', []);
-        if (isset($keranjang[$id])) {
-            unset($keranjang[$id]);
-            session()->put('keranjang', $keranjang);
-        }
-        return redirect()->route('keranjang.index');
-    }
+{
+    Keranjang::where('user_id', Auth::id())->where('id', $id)->delete();
+    return redirect()->route('keranjang.index');
+}
 
     public function update(Request $request)
     {

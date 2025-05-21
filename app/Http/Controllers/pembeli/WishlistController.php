@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Pembeli;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Produk;
+use App\Models\Wishlist;
+use Illuminate\Support\Facades\Auth;
+
 
 class WishlistController extends Controller
 {
@@ -13,7 +16,19 @@ class WishlistController extends Controller
      */
     public function index()
     {
-        $wishlist = session('wishlist', []);
+        $wishlist = Wishlist::with('produk')
+            ->where('user_id', Auth::id())
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->produk->id,
+                    'nama' => $item->produk->nama,
+                    'gambar' => $item->produk->gambar,
+                    'harga' => $item->produk->harga,
+                    'stok' => $item->produk->stok,
+                ];
+            });
+
         return view('pembeli.wishlist.index', compact('wishlist'));
     }
 
@@ -22,21 +37,21 @@ class WishlistController extends Controller
      */
     public function tambah(Request $request)
     {
-        $produk = Produk::findOrFail($request->produk_id);
-        $wishlist = session('wishlist', []);
+        $request->validate(['produk_id' => 'required|exists:produk,id']);
+
+        $user = Auth::user();
 
         // Cegah duplikat
-        if (!in_array($produk->id, array_column($wishlist, 'id'))) {
-            $wishlist[] = [
-                'id'     => $produk->id,
-                'nama'   => $produk->nama,
-                'gambar' => $produk->gambar,
-                'harga'  => $produk->harga,
-                'stok'   => $produk->stok, // ✅ Menyimpan stok produk
-            ];
-        }
+        $existing = Wishlist::where('user_id', $user->id)
+            ->where('produk_id', $request->produk_id)
+            ->first();
 
-        session(['wishlist' => $wishlist]);
+        if (!$existing) {
+            Wishlist::create([
+                'user_id' => $user->id,
+                'produk_id' => $request->produk_id
+            ]);
+        }
 
         return back()->with('success', 'Produk ditambahkan ke daftar kesukaan.');
     }
@@ -46,15 +61,13 @@ class WishlistController extends Controller
      */
     public function hapus($id)
     {
-        $wishlist = session('wishlist', []);
+        $user = Auth::user();
 
-        // Filter produk yang tidak memiliki id yang dihapus
-        $wishlist = array_filter($wishlist, function ($item) use ($id) {
-            return $item['id'] != $id;
-        });
-
-        session(['wishlist' => $wishlist]);
+        Wishlist::where('user_id', $user->id)
+            ->where('produk_id', $id)
+            ->delete();
 
         return back()->with('success', 'Produk dihapus dari kesukaan.');
     }
+
 }

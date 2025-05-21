@@ -70,7 +70,7 @@
 
         <td>
             @foreach($transaksi->items as $item)
-                <div>{{ $item->produk->nama }}</div>
+            <div>{{ $item->produk?->nama ?? 'Produk tidak ditemukan' }}</div>
             @endforeach
         </td>
         <td>

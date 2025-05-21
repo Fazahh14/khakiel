@@ -91,9 +91,9 @@
                 @elseif($item['stok'] == 0)
                     <span class="stok-habis">Stok habis</span>
                 @elseif($item['stok'] == 1)
-                    <span class="stok-terbatas">😌 hanya 1 tersisa di stok</span>
+                    <span class="stok-terbatas">hanya 1 tersisa di stok</span>
                 @else
-                    <span class="stok-tersedia">😌 tersedia</span>
+                    <span class="stok-tersedia">tersedia</span>
                 @endif
             </div>
         </div>

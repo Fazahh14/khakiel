@@ -64,8 +64,9 @@ Route::middleware(['auth', RedirectIfNotBuyer::class])->group(function () {
         Route::post('/', [KeranjangPembeliController::class, 'store'])->name('store');
         Route::post('/tambah/{id}', [KeranjangPembeliController::class, 'tambah'])->name('tambah');
         Route::post('/kurang/{id}', [KeranjangPembeliController::class, 'kurang'])->name('kurang');
-        Route::delete('/{id}', [KeranjangPembeliController::class, 'hapus'])->name('hapus'); // ✅ DELETE
+        Route::delete('/{id}', [KeranjangPembeliController::class, 'hapus'])->name('hapus');
         Route::post('/update', [KeranjangPembeliController::class, 'update'])->name('update');
+        
     });
 
     // Checkout

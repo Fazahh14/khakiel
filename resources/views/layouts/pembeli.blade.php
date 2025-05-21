@@ -90,7 +90,9 @@
                 </a>
 
                 {{-- Keranjang --}}
-                @php $jumlahKeranjang = session('keranjang') ? count(session('keranjang')) : 0; @endphp
+                @php
+                    $jumlahKeranjang = Auth::check() ? \App\Models\Keranjang::where('user_id', Auth::id())->count() : 0;
+                @endphp
                 <a href="{{ route('keranjang.index') }}" class="position-relative">
                     <img src="{{ asset('svg/keranjang.svg') }}" width="34" alt="Keranjang">
                     @if($jumlahKeranjang > 0)

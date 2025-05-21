@@ -149,8 +149,9 @@
                         <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y H:i') }}</td>
                         <td class="text-start">
                             @foreach($transaksi->items as $item)
-                                <div>{{ $item->produk->nama }}</div>
+                                <div>{{ $item->produk?->nama ?? 'Produk tidak tersedia' }}</div>
                             @endforeach
+
                         </td>
                         <td>
                             @foreach($transaksi->items as $item)
