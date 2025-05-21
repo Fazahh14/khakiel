@@ -142,7 +142,7 @@
                 <tbody>
                     @forelse($pesanans as $transaksi)
                     <tr>
-                        <td>{{ $transaksi->id }}</td>
+                        <td>{{ ($pesanans->currentPage() - 1) * $pesanans->perPage() + $loop->iteration }}</td>
                         <td>{{ $transaksi->nama }}</td>
                         <td>{{ $transaksi->alamat }}</td>
                         <td>{{ $transaksi->telepon }}</td>

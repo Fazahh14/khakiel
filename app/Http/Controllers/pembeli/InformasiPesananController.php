@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Pembeli;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaksi;
+use Illuminate\Support\Facades\Auth;
 
 class InformasiPesananController extends Controller
 {
     public function index()
     {
-        // Sementara tampilkan semua transaksi tanpa filter user
-        $pesanans = Transaksi::orderBy('created_at', 'desc')->paginate(10);
+        // Ambil transaksi yang hanya milik user yang sedang login
+        $pesanans = Transaksi::where('user_id', Auth::id())
+                            ->orderBy('created_at', 'asc')
+                            ->paginate(10);
 
         return view('pembeli.informasipesanan.index', compact('pesanans'));
     }

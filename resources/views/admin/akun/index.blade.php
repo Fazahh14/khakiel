@@ -11,7 +11,7 @@
     <div class="card animate-fade-slide">
 
         {{-- Judul di Tengah --}}
-        <h2 class="text-center fw-bold text-uppercase mb-4">Akun</h2>
+        <h2 class="text-center fw-bold text-uppercase mb-4">Kelola Akun</h2>
 
         {{-- Tombol dan Form Pencarian --}}
         <div class="top-controls">
