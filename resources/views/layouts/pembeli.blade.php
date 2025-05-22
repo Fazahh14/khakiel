@@ -78,16 +78,20 @@
                     </a>
                 @endauth
 
-                {{-- Wishlist --}}
-                @php $wishlistCount = session('wishlist') ? count(session('wishlist')) : 0; @endphp
-                <a href="{{ route('wishlist.index') }}" class="position-relative">
-                    <img src="{{ asset('svg/heart.svg') }}" width="34" alt="Wishlist">
-                    @if($wishlistCount > 0)
-                        <span class="position-absolute top-0 start-100 translate-middle badge badge-circle">
-                            {{ $wishlistCount }}
-                        </span>
-                    @endif
-                </a>
+               {{-- Wishlist --}}
+        @php
+            use App\Models\Wishlist;
+            $wishlistCount = Auth::check() ? Wishlist::where('user_id', Auth::id())->count() : 0;
+        @endphp
+        <a href="{{ route('wishlist.index') }}" class="position-relative mx-2">
+            <img src="{{ asset('svg/heart.svg') }}" width="34" alt="Wishlist">
+            @if($wishlistCount > 0)
+                <span class="position-absolute top-0 start-100 translate-middle badge badge-circle">
+                    {{ $wishlistCount }}
+                </span>
+            @endif
+        </a>
+
 
                 {{-- Keranjang --}}
                 @php

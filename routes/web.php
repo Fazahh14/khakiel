@@ -82,6 +82,7 @@ Route::middleware(['auth', RedirectIfNotBuyer::class])->group(function () {
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/tambah', [WishlistController::class, 'tambah'])->name('wishlist.tambah');
     Route::post('/wishlist/hapus/{id}', [WishlistController::class, 'hapus'])->name('wishlist.hapus');
+    Route::get('/wishlist/count', [WishlistController::class, 'count']);
 });
 
 // =============================

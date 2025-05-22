@@ -101,4 +101,26 @@
         <div class="text-muted text-center">Belum ada produk disukai.</div>
     @endforelse
 </div>
+
+    <script>
+        function updateWishlistCount() {
+            fetch('/wishlist/count')
+                .then(response => response.json())
+                .then(data => {
+                    const countElement = document.getElementById('wishlist-count');
+                    if (data.count > 0) {
+                        countElement.textContent = data.count;
+                        countElement.style.display = 'flex';
+                    } else {
+                        countElement.style.display = 'none';
+                    }
+                });
+        }
+
+        // Panggil saat load
+        document.addEventListener('DOMContentLoaded', function () {
+            updateWishlistCount();
+        });
+    </script>
+
 @endsection

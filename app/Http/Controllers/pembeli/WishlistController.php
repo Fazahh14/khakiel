@@ -70,4 +70,9 @@ class WishlistController extends Controller
         return back()->with('success', 'Produk dihapus dari kesukaan.');
     }
 
+        public function count()
+    {
+        $count = Auth::check() ? Auth::user()->wishlist()->count() : 0;
+        return response()->json(['count' => $count]);
+    }
 }
