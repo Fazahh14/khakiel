@@ -6,23 +6,35 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Keranjang;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Produk;
 
 
 class KeranjangPembeliController extends Controller
 {
-   public function index()
-{
-    $keranjang = Keranjang::where('user_id', Auth::id())->get();
+   
+    public function index()
+    {
+        $keranjang = Keranjang::with('produk')->where('user_id', Auth::id())->get();
 
-    $total = $keranjang->sum(function ($item) {
-        return $item->harga * $item->jumlah;
-    });
+        foreach ($keranjang as $item) {
+            if ($item->produk === null) {
+                $item->delete();
+            }
+        }
 
-    return view('pembeli.keranjangBelanja.index', compact('keranjang', 'total'));
-}
+        $keranjang = $keranjang->filter(function ($item) {
+            return $item->produk !== null;
+        });
+
+        $total = $keranjang->sum(function ($item) {
+            return $item->harga * $item->jumlah;
+        });
+
+        return view('pembeli.keranjangBelanja.index', compact('keranjang', 'total'));
+    }
 
     public function store(Request $request)
-{
+    {
     $validated = $request->validate([
         'id' => 'required|integer',
         'nama' => 'required|string',
@@ -50,20 +62,20 @@ class KeranjangPembeliController extends Controller
     }
 
     return redirect()->route('keranjang.index')->with('success', 'Produk berhasil ditambahkan ke keranjang.');
-}
+    }
 
     public function tambah($id)
-{
+    {
     $item = Keranjang::where('user_id', Auth::id())->where('id', $id)->first();
     if ($item) {
         $item->jumlah++;
         $item->save();
     }
     return redirect()->route('keranjang.index');
-}
+    }
 
-public function kurang($id)
-{
+    public function kurang($id)
+    {
     $item = Keranjang::where('user_id', Auth::id())->where('id', $id)->first();
     if ($item) {
         $item->jumlah--;
@@ -74,20 +86,19 @@ public function kurang($id)
         }
     }
     return redirect()->route('keranjang.index');
-}
-
+    }
 
     public function hapus($id)
-{
+    {
     Keranjang::where('user_id', Auth::id())->where('id', $id)->delete();
     return redirect()->route('keranjang.index');
-}
+    }
 
     public function update(Request $request)
     {
         $checked = $request->input('checked_items', []);
-        $keranjang = session('keranjang', []);
-        $total = 0;
+        $checked_items = session('checked_items', []);
+        $total = session('total');
 
         foreach ($checked as $id) {
             if (isset($keranjang[$id])) {
@@ -95,7 +106,11 @@ public function kurang($id)
             }
         }
 
-        return back()->with('success', 'Checkout berhasil. Total: Rp ' . number_format($total, 0, ',', '.'));
+            return redirect()->route('form.pemesanan')->with([
+        'checked_items' => $checked,
+        'total' => $total,
+    ]);
+
     }
 
     public function hapusAjax(Request $request)
