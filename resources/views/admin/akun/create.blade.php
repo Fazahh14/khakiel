@@ -9,7 +9,7 @@
 @section('content')
 <div class="container mt-5 animate-fade-slide d-flex justify-content-center">
     <div class="card custom-card shadow p-4 w-100" style="max-width: 900px;">
-        <h2 class="text-center fw-bold mb-4">Tambah Akun</h2>
+        <h2 id="form-title" class="text-center fw-bold mb-4">Tambah Akun</h2>
 
         <form action="{{ route('admin.akun.store') }}" method="POST">
             @csrf
@@ -75,3 +75,26 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const roleSelect = document.getElementById('role');
+        const title = document.getElementById('form-title');
+
+        function updateTitle() {
+            const selectedRole = roleSelect.value;
+            if (selectedRole === 'seller') {
+                title.textContent = 'Tambah Akun Admin';
+            } else if (selectedRole === 'buyer') {
+                title.textContent = 'Tambah Akun Pembeli';
+            } else {
+                title.textContent = 'Tambah Akun';
+            }
+        }
+
+        roleSelect.addEventListener('change', updateTitle);
+        updateTitle(); // panggil saat load pertama kali
+    });
+</script>
+@endpush

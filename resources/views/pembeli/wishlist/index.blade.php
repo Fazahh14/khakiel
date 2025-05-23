@@ -91,9 +91,9 @@
                 @elseif($item['stok'] == 0)
                     <span class="stok-habis">Stok habis</span>
                 @elseif($item['stok'] == 1)
-                    <span class="stok-terbatas">😌 hanya 1 tersisa di stok</span>
+                    <span class="stok-terbatas">hanya 1 tersisa di stok</span>
                 @else
-                    <span class="stok-tersedia">😌 tersedia</span>
+                    <span class="stok-tersedia">tersedia</span>
                 @endif
             </div>
         </div>
@@ -101,4 +101,26 @@
         <div class="text-muted text-center">Belum ada produk disukai.</div>
     @endforelse
 </div>
+
+    <script>
+        function updateWishlistCount() {
+            fetch('/wishlist/count')
+                .then(response => response.json())
+                .then(data => {
+                    const countElement = document.getElementById('wishlist-count');
+                    if (data.count > 0) {
+                        countElement.textContent = data.count;
+                        countElement.style.display = 'flex';
+                    } else {
+                        countElement.style.display = 'none';
+                    }
+                });
+        }
+
+        // Panggil saat load
+        document.addEventListener('DOMContentLoaded', function () {
+            updateWishlistCount();
+        });
+    </script>
+
 @endsection

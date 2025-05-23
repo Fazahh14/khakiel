@@ -9,23 +9,22 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
-        Schema::create('akuns', function (Blueprint $table) {
+        Schema::create('wishlists', function (Blueprint $table) {
             $table->id();
-            $table->string('nama', 100); 
-            $table->string('email', 100)->unique();
-            $table->string('password');
-            $table->enum('role', ['buyer', 'seller']); 
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('produk_id')->constrained('produk')->onDelete('cascade');
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('akuns');
+        Schema::dropIfExists('wishlists');
     }
 };

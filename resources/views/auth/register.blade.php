@@ -4,7 +4,7 @@
 <div class="container py-5">
     <div class="row justify-content-center mt-3">
         <div class="col-lg-8 rounded-4 shadow p-4 d-flex flex-column flex-md-row align-items-center justify-content-between"
-             style="background-color: #E5CBB7;">
+            style="background-color: #E5CBB7;">
 
             {{-- Form Register --}}
             <div class="col-md-6 px-4">
@@ -33,7 +33,13 @@
                             class="form-control @error('email') is-invalid @enderror bg-white">
 
                         @error('email')
-                            <div class="invalid-feedback d-block">Wah, emailnya udah dipakai orang lain nih 😅</div>
+                            @if(str_contains($message, 'unique'))
+                                <div class="invalid-feedback d-block">Wah, emailnya udah dipakai orang lain nih 😅</div>
+                            @elseif(str_contains($message, '@gdwgy.com'))
+                                <div class="invalid-feedback d-block">Email harus menggunakan domain @gdwgy.com</div>
+                            @else
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @endif
                         @enderror
                     </div>
 

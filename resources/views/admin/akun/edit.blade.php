@@ -17,7 +17,9 @@
 
 <div class="container mt-5 animate-fade-slide">
     <div class="form-section mx-auto">
-        <h2 class="text-center fw-bold mb-4">Edit Akun</h2>
+        <h2 class="text-center fw-bold mb-4">
+            Edit Akun {{ $akun->role == 'seller' ? 'Admin' : ($akun->role == 'buyer' ? 'Pembeli' : '') }}
+        </h2>
 
         <form action="{{ route('admin.akun.update', $akun->id) }}" method="POST">
             @csrf

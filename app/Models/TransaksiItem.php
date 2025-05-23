@@ -25,6 +25,6 @@ class TransaksiItem extends Model
     // Relasi ke transaksi induk
     public function transaksi()
     {
-        return $this->belongsTo(Transaksi::class, 'transaksi_id');
+        return $this->belongsTo(Produk::class, 'produk_id');
     }
 }
