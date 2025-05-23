@@ -95,7 +95,7 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>No</th>
                         <th>Nama</th>
                         <th>Alamat</th>
                         <th>Telepon</th>
@@ -109,16 +109,15 @@
                 </thead>
                 <tbody>
                     @forelse($pesanans as $transaksi)
-
                         <tr>
-                            <td>{{ $transaksi->id }}</td>
+                            <td>{{ ($pesanans->currentPage() - 1) * $pesanans->perPage() + $loop->iteration }}</td>
                             <td>{{ $transaksi->nama }}</td>
                             <td>{{ $transaksi->alamat }}</td>
                             <td>{{ $transaksi->telepon }}</td>
-                            <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y H:i') }}</td>
                             <td class="text-start produk-list">
                                 @foreach($transaksi->items as $item)
-                                    <div>{{ $item->produk->nama ?? 'Produk tidak ditemukan' }}</div>
+                                    <div>{{ $item->produk?->nama ?? 'Produk tidak tersedia' }}</div>
                                 @endforeach
                             </td>
                             <td>
@@ -130,46 +129,16 @@
                             <td>Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
                             <td>
                                 @php
-                                    $badgeClass = $transaksi->status === 'selesai' ? 'badge-selesai' : 'badge-sedang-diproses';
+                                    $status = strtolower($transaksi->status);
+                                    $badgeClass = match($status) {
+                                        'selesai' => 'badge-selesai',
+                                        'sedang diproses', 'pending', 'belum diproses' => 'badge-sedang-diproses',
+                                        default => 'bg-secondary text-white'
+                                    };
                                 @endphp
-                                <span class="badge-status {{ $badgeClass }}">{{ ucfirst($transaksi->status) }}</span>
+                                <span class="badge-status {{ $badgeClass }}">{{ ucfirst($status) }}</span>
                             </td>
                         </tr>
-
-                    <tr>
-                        <td>{{ ($pesanans->currentPage() - 1) * $pesanans->perPage() + $loop->iteration }}</td>
-                        <td>{{ $transaksi->nama }}</td>
-                        <td>{{ $transaksi->alamat }}</td>
-                        <td>{{ $transaksi->telepon }}</td>
-                        <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y H:i') }}</td>
-                        <td class="text-start">
-                            @foreach($transaksi->items as $item)
-                                <div>{{ $item->produk?->nama ?? 'Produk tidak tersedia' }}</div>
-                            @endforeach
-
-                        </td>
-                        <td>
-                            @foreach($transaksi->items as $item)
-                                <div>{{ $item->qty }}</div>
-                            @endforeach
-                        </td>
-                        <td>{{ ucfirst($transaksi->metode) }}</td>
-                        <td>Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
-                        <td>
-                            @php
-                                $status = $transaksi->status;
-                                $badgeClass = match($status) {
-                                    'pending' => 'badge badge-pending',
-                                    'belum diproses' => 'badge badge-belum-diproses',
-                                    'sedang diproses' => 'badge badge-sedang-diproses',
-                                    'selesai' => 'badge badge-selesai',
-                                    default => 'badge bg-light text-dark',
-                                };
-                            @endphp
-                            <span class="{{ $badgeClass }}">{{ ucfirst($status) }}</span>
-                        </td>
-                    </tr>
-
                     @empty
                         <tr>
                             <td colspan="10" class="text-muted text-center">Belum ada data pesanan.</td>
