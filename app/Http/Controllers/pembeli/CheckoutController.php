@@ -255,4 +255,4 @@ $transaksi = Transaksi::create([
             return redirect()->route('checkout.form')->with('error', 'Gagal membuat token pembayaran.');
         }
     }
-}
+} 
