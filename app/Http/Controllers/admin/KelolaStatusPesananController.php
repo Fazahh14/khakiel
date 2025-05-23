@@ -6,44 +6,39 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Transaksi;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class KelolaStatusPesananController extends Controller
 {
     public function index()
     {
-        // Cek apakah kolom status_pembayaran tersedia dulu
+        // Otomatis ubah ke "sedang diproses" kalau sudah bayar
         if (Schema::hasColumn('transaksis', 'status_pembayaran')) {
-            // Update otomatis jika sudah bayar
-            Transaksi::where('status_pembayaran', 'sudah bayar')
-                ->where('status', '!=', 'sedang diproses') // biar gak overwrite yg udah diproses
-                ->update(['status' => 'sedang diproses']);
+            $transaksisAuto = Transaksi::where('status_pembayaran', 'sudah bayar')
+                ->where('status', '!=', 'sedang diproses')
+                ->where('status', '!=', 'selesai')
+                ->get();
+
+            foreach ($transaksisAuto as $trx) {
+                $trx->status = 'sedang diproses';
+                $trx->save();
+            }
         }
 
-        $transaksis = Transaksi::with('items.produk')->orderBy('id', 'asc')->paginate(25);
+        $transaksis = Transaksi::with(['items.produk'])->orderBy('id', 'asc')->paginate(25);
+
         return view('admin.statuspesanan.index', compact('transaksis'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,belum diproses,sedang diproses,selesai'
+            'status' => 'required|in:sedang diproses,selesai'
         ]);
 
         $transaksi = Transaksi::findOrFail($id);
-
-        $newStatus = $request->status;
-
-        // Cek jika status_pembayaran == 'sudah bayar' maka ubah otomatis
-        if (Schema::hasColumn('transaksis', 'status_pembayaran') &&
-            $transaksi->status_pembayaran === 'sudah bayar') {
-            $newStatus = 'sedang diproses';
-        }
-
-        $transaksi->update([
-            'status' => $newStatus
-        ]);
+        $transaksi->status = $request->status;
+        $transaksi->save();
 
         return redirect()->route('admin.kelolastatuspesanan.index')
                          ->with('success', 'Status pesanan berhasil diperbarui.');
@@ -58,19 +53,21 @@ class KelolaStatusPesananController extends Controller
         }
 
         $no = preg_replace('/[^0-9]/', '', $transaksi->telepon);
-        if (substr($no, 0, 1) == '0') {
+        if (substr($no, 0, 1) === '0') {
             $no = '62' . substr($no, 1);
         }
-$pesan = "🎉 Hai {$transaksi->nama}, Sahabat setia Khakiel!\n";
-$pesan .= "Kami baru saja mencatat bahwa kamu tergoda buat checkout 😄\n\n";
-$pesan .= "📦 Detail pesanan kamu:\n";
-foreach ($transaksi->items as $item) {
-    $pesan .= "• {$item->produk->nama} (qty: {$item->qty})\n";
-}
-$pesan .= "\n💰 Total belanja: Rp " . number_format($transaksi->total, 0, ',', '.') . "\n";
-$pesan .= "📌 Status: {$transaksi->status}\n\n";
-$pesan .= "Terima kasih sudah belanja di Khakiel. Kamu memang top! 🚀\n";
-$pesan .= "Kalau ada yang mau ditanyain, tim kami siap bantu kapan pun! 🤝";
+
+        $pesan = "🎉 Hai {$transaksi->nama}, Sahabat setia Khakiel!\n";
+        $pesan .= "Kami baru saja mencatat bahwa kamu tergoda buat checkout 😄\n\n";
+        $pesan .= "📦 Detail pesanan kamu:\n";
+        foreach ($transaksi->items as $item) {
+            $produkNama = $item->produk->nama ?? 'Produk sudah dihapus';
+            $pesan .= "• {$produkNama} (qty: {$item->qty})\n";
+        }
+        $pesan .= "\n💰 Total belanja: Rp " . number_format($transaksi->total, 0, ',', '.') . "\n";
+        $pesan .= "📌 Status: {$transaksi->status}\n\n";
+        $pesan .= "Terima kasih sudah belanja di Khakiel. Kamu memang top! 🚀\n";
+        $pesan .= "Kalau ada yang mau ditanyain, tim kami siap bantu kapan pun! 🤝";
 
         try {
             $response = Http::withHeaders([

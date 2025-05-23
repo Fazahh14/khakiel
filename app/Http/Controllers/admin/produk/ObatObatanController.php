@@ -24,9 +24,9 @@ class ObatObatanController extends Controller
         $data = $request->validate([
             'nama' => 'required',
             'deskripsi' => 'nullable',
-            'stok' => 'required|integer',
-            'harga' => 'required|numeric',
-            'gambar' => 'nullable|image|max:2048'
+            'stok' => 'required|integer|min:1',
+            'harga' => 'required|numeric|min:1',
+            'gambar' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048', // max 2MB
         ]);
 
         $data['kategori'] = 'obat-obatan';
@@ -52,9 +52,9 @@ class ObatObatanController extends Controller
         $data = $request->validate([
             'nama' => 'required',
             'deskripsi' => 'nullable',
-            'stok' => 'required|integer',
-            'harga' => 'required|numeric',
-            'gambar' => 'nullable|image|max:2048'
+            'stok' => 'required|integer|min:1',
+            'harga' => 'required|numeric|min:1',
+            'gambar' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048', // max 2MB
         ]);
 
         if ($request->hasFile('gambar')) {

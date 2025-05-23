@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Produk;
 use App\Http\Controllers\Controller;
 use App\Models\Produk;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AksesorisController extends Controller
 {
@@ -22,20 +23,22 @@ class AksesorisController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nama' => 'required',
-            'deskripsi' => 'nullable',
-            'stok' => 'required|integer',
-            'harga' => 'required|numeric',
-            'gambar' => 'nullable|image|max:2048'
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'stok' => 'required|integer|min:1',
+            'harga' => 'required|numeric|min:1',
+            'gambar' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048', // max 2MB
         ]);
 
         $data['kategori'] = 'aksesoris';
 
         if ($request->hasFile('gambar')) {
+            // Simpan gambar di storage/app/public/produk
             $data['gambar'] = $request->file('gambar')->store('produk', 'public');
         }
 
         Produk::create($data);
+
         return redirect()->route('admin.aksesoris.index')->with('success', 'Produk berhasil ditambahkan');
     }
 
@@ -50,20 +53,19 @@ class AksesorisController extends Controller
         $produk = Produk::findOrFail($id);
 
         $data = $request->validate([
-            'nama' => 'required',
-            'deskripsi' => 'nullable',
-            'stok' => 'required|integer',
-            'harga' => 'required|numeric',
-            'gambar' => 'nullable|image|max:2048'
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'stok' => 'required|integer|min:1',
+            'harga' => 'required|numeric|min:1',
+            'gambar' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
         ]);
 
         $data['kategori'] = 'aksesoris';
 
-        // Jika user upload gambar baru
         if ($request->hasFile('gambar')) {
             // Hapus gambar lama jika ada
-            if ($produk->gambar && file_exists(storage_path('app/public/' . $produk->gambar))) {
-                unlink(storage_path('app/public/' . $produk->gambar));
+            if ($produk->gambar && Storage::disk('public')->exists($produk->gambar)) {
+                Storage::disk('public')->delete($produk->gambar);
             }
 
             // Simpan gambar baru
@@ -80,8 +82,8 @@ class AksesorisController extends Controller
         $produk = Produk::findOrFail($id);
 
         // Hapus gambar fisik jika ada
-        if ($produk->gambar && file_exists(storage_path('app/public/' . $produk->gambar))) {
-            unlink(storage_path('app/public/' . $produk->gambar));
+        if ($produk->gambar && Storage::disk('public')->exists($produk->gambar)) {
+            Storage::disk('public')->delete($produk->gambar);
         }
 
         $produk->delete();

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema; // WAJIB untuk \Schema
 use App\Models\User;
 
 class Transaksi extends Model
@@ -28,5 +29,17 @@ class Transaksi extends Model
     public function items()
     {
         return $this->hasMany(TransaksiItem::class);
+    }
+
+    public function updateStatusOtomatis()
+    {
+        if (
+            Schema::hasColumn('transaksis', 'status_pembayaran') &&
+            $this->status_pembayaran === 'sudah bayar' &&
+            $this->status !== 'sedang diproses'
+        ) {
+            $this->status = 'sedang diproses';
+            $this->save();
+        }
     }
 }

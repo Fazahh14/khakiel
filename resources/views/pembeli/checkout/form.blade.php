@@ -7,7 +7,6 @@
     body {
         background-color: #f9f9f9;
     }
-
     .checkout-wrapper {
         background-color: #fff;
         border-radius: 12px;
@@ -16,7 +15,6 @@
         max-width: 700px;
         margin: 0 auto;
     }
-
     .btn-checkout {
         background-color: #198754;
         color: white;
@@ -25,7 +23,6 @@
         border-radius: 8px;
         border: none;
     }
-
     .btn-checkout:hover {
         background-color: #146c43;
     }
@@ -46,36 +43,52 @@
 
             <div class="mb-3">
                 <label for="nama" class="form-label">Nama Pemesan</label>
-                <input type="text" name="nama" class="form-control" required>
+                <input type="text" id="nama" name="nama" class="form-control" required value="{{ old('nama') }}">
+                @error('nama')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
             <div class="mb-3">
                 <label for="alamat" class="form-label">Alamat Pemesan</label>
-                <input type="text" name="alamat" class="form-control" required>
+                <input type="text" id="alamat" name="alamat" class="form-control" required value="{{ old('alamat') }}">
+                @error('alamat')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
             <div class="mb-3">
                 <label for="telepon" class="form-label">No Telepon</label>
-                <input type="text" name="telepon" class="form-control" required>
+                <input type="text" id="telepon" name="telepon" class="form-control" required value="{{ old('telepon') }}">
+                @error('telepon')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
             <div class="mb-3">
                 <label for="metode" class="form-label">Metode Pembayaran</label>
-                <select name="metode" class="form-select" required>
+                <select id="metode" name="metode" class="form-select" required>
                     <option value="">-- Pilih Metode --</option>
-                    <option value="midtrans">Midtrans (VA/Qris)</option>
+                    <option value="midtrans" {{ old('metode') == 'midtrans' ? 'selected' : '' }}>Midtrans (VA/Qris)</option>
                 </select>
+                @error('metode')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
             <div class="mb-3">
                 <label for="tanggal_pemesanan" class="form-label">Tanggal Pemesanan</label>
-                <input type="datetime-local" name="tanggal_pemesanan" class="form-control" 
-                    value="{{ now()->format('Y-m-d\TH:i') }}" required>
+                <input type="date" id="tanggal_pemesanan" name="tanggal_pemesanan" class="form-control" 
+       value="{{ old('tanggal_pemesanan', now()->format('Y-m-d')) }}" required>
+
+                @error('tanggal_pemesanan')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
             @foreach($produk as $index => $item)
                 @php
-                    $jumlah = $item['jumlah'] ?? 1;
+                    $jumlah = old("produk.$index.jumlah", $item['jumlah'] ?? 1);
                     $harga = $item['harga'];
                     $subtotal = $jumlah * $harga;
                 @endphp
@@ -85,12 +98,11 @@
 
                     <label class="form-label mt-2">Harga Satuan</label>
                     <input type="text" class="form-control harga-satuan" 
-                           value="Rp {{ number_format($harga, 0, ',', '.') }}" 
-                           readonly data-harga="{{ $harga }}">
+                           value="Rp {{ number_format($harga, 0, ',', '.') }}" readonly data-harga="{{ $harga }}">
 
                     <label for="produk[{{ $index }}][jumlah]" class="form-label mt-2">Jumlah</label>
-                    <input type="number" name="produk[{{ $index }}][jumlah]" class="form-control jumlah-input" 
-                           value="{{ $jumlah }}" min="1" required>
+                    <input type="number" id="produk-{{ $index }}-jumlah" name="produk[{{ $index }}][jumlah]" 
+                           class="form-control jumlah-input" value="{{ $jumlah }}" min="1" required>
 
                     <label class="form-label mt-2">Total Harga</label>
                     <input type="text" class="form-control total-harga" 
@@ -100,7 +112,7 @@
                     <input type="hidden" name="produk[{{ $index }}][id]" value="{{ $item['id'] }}">
                     <input type="hidden" name="produk[{{ $index }}][nama]" value="{{ $item['nama'] }}">
                     <input type="hidden" name="produk[{{ $index }}][harga]" value="{{ $harga }}">
-                    <input type="hidden" name="produk[{{ $index }}][gambar]" value="{{ $item['gambar'] }}">
+                    <input type="hidden" name="produk[{{ $index }}][gambar]" value="{{ $item['gambar'] ?? '' }}">
                     <input type="hidden" name="produk[{{ $index }}][check]" value="{{ $item['check'] ?? 1 }}">
                 </div>
             @endforeach
@@ -120,35 +132,33 @@
 
 @push('scripts')
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const jumlahInputs = document.querySelectorAll(".jumlah-input");
-        const grandTotalInput = document.getElementById("grand-total");
-        const grandTotalText = document.getElementById("grand-total-text");
+document.addEventListener("DOMContentLoaded", function () {
+    const jumlahInputs = document.querySelectorAll(".jumlah-input");
+    const grandTotalInput = document.getElementById("grand-total");
+    const grandTotalText = document.getElementById("grand-total-text");
 
-        function formatRupiah(angka) {
-            return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
+    function formatRupiah(angka) {
+        return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
 
-        function hitungTotal() {
-            let total = 0;
-
-            document.querySelectorAll('.produk-item').forEach(item => {
-                const jumlah = parseInt(item.querySelector('.jumlah-input').value) || 0;
-                const harga = parseInt(item.querySelector('.harga-satuan').dataset.harga) || 0;
-                const subtotal = jumlah * harga;
-                item.querySelector('.total-harga').value = formatRupiah(subtotal);
-                total += subtotal;
-            });
-
-            grandTotalInput.value = total;
-            grandTotalText.textContent = formatRupiah(total);
-        }
-
-        jumlahInputs.forEach(input => {
-            input.addEventListener("input", hitungTotal);
+    function hitungTotal() {
+        let total = 0;
+        document.querySelectorAll('.produk-item').forEach(item => {
+            const jumlah = parseInt(item.querySelector('.jumlah-input').value) || 0;
+            const harga = parseInt(item.querySelector('.harga-satuan').dataset.harga) || 0;
+            const subtotal = jumlah * harga;
+            item.querySelector('.total-harga').value = formatRupiah(subtotal);
+            total += subtotal;
         });
+        grandTotalInput.value = total;
+        grandTotalText.textContent = formatRupiah(total);
+    }
 
-        hitungTotal(); // kalkulasi awal
+    jumlahInputs.forEach(input => {
+        input.addEventListener("input", hitungTotal);
     });
+
+    hitungTotal();
+});
 </script>
 @endpush

@@ -23,15 +23,13 @@ class MidtransController extends Controller
                 return response()->json(['status' => 'not found'], 404);
             }
 
-            if ($status === 'settlement' || $status === 'capture') {
-                $transaksi->status_pembayaran = 'sudah bayar';
-                $transaksi->status = 'proses';
-            } elseif ($status === 'pending') {
-                $transaksi->status_pembayaran = 'belum bayar';
-            } elseif ($status === 'expire' || $status === 'cancel') {
-                $transaksi->status_pembayaran = 'dibatalkan';
-                $transaksi->status = 'gagal';
-            }
+           if ($status === 'settlement' || $status === 'capture') {
+    $transaksi->status_pembayaran = 'sudah bayar';
+    $transaksi->save();
+
+    // Panggil fungsi untuk update status otomatis
+    $transaksi->updateStatusOtomatis();
+}
 
             $transaksi->save();
 

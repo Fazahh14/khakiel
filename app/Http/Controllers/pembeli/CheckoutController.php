@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Transaksi;
 use App\Models\TransaksiItem;
-use App\Models\Produk; // Import model Produk untuk update stok
+use App\Models\Produk;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Midtrans\Snap;
@@ -14,6 +14,9 @@ use Midtrans\Config;
 
 class CheckoutController extends Controller
 {
+    /**
+     * Proses pemilihan produk dari keranjang atau langsung beli
+     */
     public function storeProduk(Request $request)
     {
         try {
@@ -22,31 +25,29 @@ class CheckoutController extends Controller
             $produkTerpilih = [];
 
             if ($langsungBeli) {
-                foreach ($produkInput as $id => $data) {
+                // Produk dari halaman langsung beli (checkbox)
+                foreach ($produkInput as $data) {
                     if (!empty($data['check'])) {
-                        $jumlah = isset($data['jumlah']) && (int)$data['jumlah'] > 0 ? (int)$data['jumlah'] : 1;
-
                         $produkTerpilih[] = [
                             'id'     => $data['id'],
                             'nama'   => $data['nama'],
                             'harga'  => (int) $data['harga'],
-                            'jumlah' => $jumlah,
+                            'jumlah' => max(1, (int) ($data['jumlah'] ?? 1)),
                             'gambar' => $data['gambar'] ?? null,
                         ];
                     }
                 }
                 session(['checkout_langsung' => true]);
             } else {
+                // Produk dari keranjang (session)
                 $keranjang = session('keranjang', []);
                 foreach ($produkInput as $id => $data) {
                     if (!empty($data['check']) && isset($keranjang[$id])) {
-                        $jumlah = isset($keranjang[$id]['jumlah']) && (int)$keranjang[$id]['jumlah'] > 0 ? (int)$keranjang[$id]['jumlah'] : 1;
-
                         $produkTerpilih[] = [
                             'id'     => $id,
                             'nama'   => $keranjang[$id]['nama'],
                             'harga'  => (int) $keranjang[$id]['harga'],
-                            'jumlah' => $jumlah,
+                            'jumlah' => max(1, (int) $keranjang[$id]['jumlah']),
                             'gambar' => $keranjang[$id]['gambar'] ?? null,
                         ];
                     }
@@ -55,13 +56,14 @@ class CheckoutController extends Controller
             }
 
             if (empty($produkTerpilih)) {
-                $route = $langsungBeli ? 'pembeli.produk.index' : 'keranjang.index';
-                return redirect()->route($route)->with('error', 'Silakan pilih produk untuk checkout.');
+                $redirectRoute = $langsungBeli ? 'pembeli.produk.index' : 'keranjang.index';
+                return redirect()->route($redirectRoute)->with('error', 'Silakan pilih produk untuk checkout.');
             }
 
             // Hitung total harga
             $total = collect($produkTerpilih)->sum(fn($item) => $item['harga'] * $item['jumlah']);
 
+            // Simpan ke session
             session([
                 'checkout_produk' => $produkTerpilih,
                 'checkout_total'  => $total,
@@ -74,6 +76,9 @@ class CheckoutController extends Controller
         }
     }
 
+    /**
+     * Tampilkan form checkout berdasarkan produk yang sudah dipilih
+     */
     public function form()
     {
         try {
@@ -91,47 +96,70 @@ class CheckoutController extends Controller
         }
     }
 
+    /**
+     * Proses submit form checkout: simpan transaksi, update stok, dan proses pembayaran
+     */
     public function process(Request $request)
     {
         try {
-            $validated = $request->validate([
-                'nama'    => 'required|string|max:100',
-                'alamat'  => 'required|string|max:255',
-                'telepon' => 'required|string|max:20',
-                'metode'  => 'required|in:midtrans',
-            ]);
+            // Validasi input form checkout
+           $validated = $request->validate([
+    'nama'               => 'required|string|max:100',
+    'alamat'             => 'required|string|max:255',
+    'telepon'            => ['required', 'regex:/^\d{10,16}$/'],
+    'metode'             => 'required|in:midtrans',
+    'tanggal_pemesanan'  => 'required|date',
+    'produk'             => 'required|array',
+    'produk.*.jumlah'    => 'required|integer|min:1',
+]);
 
-            $produk   = session('checkout_produk');
-            $langsung = session('checkout_langsung', false);
 
-            if (!$produk || empty($produk)) {
+            $produkSession = session('checkout_produk');
+            if (!$produkSession || empty($produkSession)) {
                 return redirect()->route('keranjang.index')->with('error', 'Data produk tidak tersedia.');
             }
 
-            // Hitung ulang total
-            $total = collect($produk)->sum(fn($item) => $item['harga'] * $item['jumlah']);
+            $produkRequest = $request->input('produk', []);
 
+            // Sinkronisasi jumlah input form dengan data produk session
+            $produkFinal = [];
+            foreach ($produkSession as $index => $item) {
+                $jumlahBaru = isset($produkRequest[$index]['jumlah']) ? (int) $produkRequest[$index]['jumlah'] : $item['jumlah'];
+                $produkFinal[] = [
+                    'id'     => $item['id'],
+                    'nama'   => $item['nama'],
+                    'harga'  => $item['harga'],
+                    'jumlah' => max(1, $jumlahBaru),
+                    'gambar' => $item['gambar'] ?? null,
+                ];
+            }
+
+            $total = collect($produkFinal)->sum(fn($item) => $item['harga'] * $item['jumlah']);
             if ($total <= 0) {
                 return redirect()->route('checkout.form')->with('error', 'Total transaksi tidak valid.');
             }
 
+            // Generate order ID unik
             $orderId = 'ORD-' . time() . '-' . strtoupper(uniqid());
 
             // Simpan transaksi utama
-            $transaksi = Transaksi::create([
-                'user_id'         => Auth::id(),
-                'order_id'        => $orderId,
-                'nama'            => $validated['nama'],
-                'alamat'          => $validated['alamat'],
-                'telepon'         => $validated['telepon'],
-                'tanggal_pesanan' => now()->toDateString(),
-                'total'           => $total,
-                'status'          => 'pending',
-                'metode'          => $validated['metode'],
-            ]);
+            // Simpan transaksi utama
+$transaksi = Transaksi::create([
+    'user_id'         => Auth::id(),
+    'order_id'        => $orderId,
+    'nama'            => $validated['nama'],
+    'alamat'          => $validated['alamat'],
+    'telepon'         => $validated['telepon'],
+    // Simpan hanya tanggal tanpa waktu
+   'tanggal_pesanan' => $validated['tanggal_pemesanan'],
+    'total'           => $total,
+    'status'          => 'sedang diproses',
+    'metode'          => $validated['metode'],
+]);
 
-            // Simpan detail produk dan update stok
-            foreach ($produk as $item) {
+
+            // Simpan item transaksi dan update stok produk
+            foreach ($produkFinal as $item) {
                 TransaksiItem::create([
                     'transaksi_id' => $transaksi->id,
                     'produk_id'    => $item['id'],
@@ -140,7 +168,6 @@ class CheckoutController extends Controller
                     'harga'        => $item['harga'],
                 ]);
 
-                // Update stok produk
                 $produkModel = Produk::find($item['id']);
                 if ($produkModel) {
                     $produkModel->stok = max(0, $produkModel->stok - $item['jumlah']);
@@ -148,18 +175,18 @@ class CheckoutController extends Controller
                 }
             }
 
-            // Hapus produk dari keranjang jika checkout bukan langsung beli
-            if (!$langsung) {
+            // Hapus produk dari keranjang jika bukan checkout langsung
+            if (!session('checkout_langsung', false)) {
                 $keranjang = session('keranjang', []);
-                foreach ($produk as $item) {
+                foreach ($produkFinal as $item) {
                     unset($keranjang[$item['id']]);
                 }
                 session(['keranjang' => $keranjang]);
             }
 
-            // Proses pembayaran Midtrans
+            // Proses pembayaran via Midtrans
             if ($validated['metode'] === 'midtrans') {
-                return $this->processMidtransPayment($orderId, $total, $produk, $validated, $langsung);
+                return $this->processMidtransPayment($orderId, $total, $produkFinal, $validated, session('checkout_langsung', false));
             }
 
             // Bersihkan session checkout
@@ -173,6 +200,9 @@ class CheckoutController extends Controller
         }
     }
 
+    /**
+     * Proses pembayaran Midtrans dan tampilkan token snap
+     */
     protected function processMidtransPayment($orderId, $total, $produk, $data, $langsung)
     {
         try {
@@ -181,14 +211,12 @@ class CheckoutController extends Controller
             Config::$isSanitized  = true;
             Config::$is3ds        = true;
 
-            $itemDetails = array_map(function ($item) {
-                return [
-                    'id'       => (string) $item['id'],
-                    'price'    => (int) $item['harga'],
-                    'quantity' => (int) $item['jumlah'],
-                    'name'     => $item['nama'] ?? 'Produk',
-                ];
-            }, $produk);
+            $itemDetails = array_map(fn($item) => [
+                'id'       => (string) $item['id'],
+                'price'    => (int) $item['harga'],
+                'quantity' => (int) $item['jumlah'],
+                'name'     => $item['nama'] ?? 'Produk',
+            ], $produk);
 
             $customerDetails = [
                 'first_name' => $data['nama'] ?? 'Pembeli',
@@ -208,18 +236,11 @@ class CheckoutController extends Controller
                 ],
                 'customer_details' => $customerDetails,
                 'item_details'     => $itemDetails,
-                'callbacks'        => [
-                    'finish' => route('pembeli.produk.index'),
-                ],
             ];
-
-            Log::info('Midtrans params:', $params);
 
             $snapToken = Snap::getSnapToken($params);
 
-            Log::info('Midtrans snap token:', [$snapToken]);
-
-            // Bersihkan session checkout setelah dapat token pembayaran
+            // Hapus session checkout
             session()->forget(['checkout_produk', 'checkout_total', 'checkout_langsung']);
 
             return view('pembeli.checkout.snap', [
@@ -231,7 +252,7 @@ class CheckoutController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Midtrans Error: ' . $e->getMessage());
-            return redirect()->route('checkout.form')->with('error', 'Gagal membuat token pembayaran: ' . $e->getMessage());
+            return redirect()->route('checkout.form')->with('error', 'Gagal membuat token pembayaran.');
         }
     }
 }
