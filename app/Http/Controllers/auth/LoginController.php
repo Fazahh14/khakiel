@@ -33,7 +33,7 @@ class LoginController extends Controller
 
             return match (Auth::user()->role) {
                 'buyer' => redirect()->route('pembeli.produk.index')->with('success', 'Login berhasil!'),
-                'seller' => redirect()->route('admin.akun.index')->with('success', 'Login admin berhasil!'), // ← diperbaiki disini
+                'seller' => redirect()->route('admin.akun.index')->with('success', 'Login admin berhasil!'), 
                 default => abort(403, 'Role tidak dikenali'),
             };
         }

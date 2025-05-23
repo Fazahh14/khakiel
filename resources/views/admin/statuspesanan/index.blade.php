@@ -53,7 +53,7 @@
         <th>Tanggal Pesanan</th>
         <th>Nama Produk</th>
         <th>Qty</th>
-        <th>Metode</th> {{-- ✅ Tambahan --}}
+        <th>Metode</th> 
         <th>Total</th>
         <th>Status</th>
         <th>Aksi</th>
@@ -79,7 +79,7 @@
             @endforeach
         </td>
 
-        <td>{{ ucfirst($transaksi->metode) }}</td> {{-- ✅ Tambahan kolom metode --}}
+        <td>{{ ucfirst($transaksi->metode) }}</td> 
 
         <td>Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
         <td>
@@ -121,7 +121,6 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
         @if($transaksis->hasPages())
             <div class="d-flex justify-content-end mt-4">
                 {{ $transaksis->onEachSide(1)->links() }}

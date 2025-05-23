@@ -15,29 +15,35 @@ class RegisterController extends Controller
         return view('auth.register');
     }
 
-    // Proses registrasi user baru
-    public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email',
-            'password' => [
-                'required',
-                'confirmed',
-                'min:8',
-                'regex:/[a-z]/',      // huruf kecil
-                'regex:/[A-Z]/',      // huruf besar
-                'regex:/[0-9]/',      // angka
-            ],
-        ]);
+public function register(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:100',
+        'email' => [
+            'required',
+            'email',
+            'unique:users,email',
+            'regex:/^[a-zA-Z0-9._%+-]+@gdwgy\.com$/', 
+        ],
+        'password' => [
+            'required',
+            'confirmed',
+            'min:8',
+            'regex:/[a-z]/',      
+            'regex:/[A-Z]/',      
+            'regex:/[0-9]/',      
+        ],
+    ], [
+        'email.regex' => 'Email harus menggunakan domain @gdwgy.com',
+    ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'buyer',
-        ]);
+    User::create([
+        'name' => $request->name,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+        'role' => 'buyer',
+    ]);
 
-        return redirect()->route('login')->with('status', 'Akun berhasil dibuat! Silakan login.');
+    return redirect()->route('login')->with('status', 'Akun berhasil dibuat! Silakan login.');
     }
 }

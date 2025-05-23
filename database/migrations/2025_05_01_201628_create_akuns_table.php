@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('akuns', function (Blueprint $table) {
             $table->id();
-            $table->string('nama', 100); // tambahkan batasan panjang karakter
+            $table->string('nama', 100); 
             $table->string('email', 100)->unique();
-            $table->string('password'); // default panjang string sudah cukup
-            $table->enum('role', ['admin', 'user']); // lebih baik enum agar konsisten
+            $table->string('password');
+            $table->enum('role', ['buyer', 'seller']); 
             $table->timestamps();
         });
     }

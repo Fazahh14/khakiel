@@ -11,10 +11,10 @@ class AkunController extends Controller
 {
     public function index()
     {
-        // Menampilkan akun dengan role buyer dan pagination 20 data per halaman
-        $akuns = User::where('role', 'buyer')->paginate(20);
+        $akuns = User::whereIn('role', ['buyer', 'seller'])->paginate(20);
         return view('admin.akun.index', compact('akuns'));
     }
+
 
     public function create()
     {
