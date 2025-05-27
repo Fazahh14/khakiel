@@ -74,7 +74,9 @@
 
             <div id="keranjang-list">
                 @foreach ($keranjang as $item)
-                    <div class="card card-custom mb-4" data-id="{{ $item->id }}">
+                    <div class="card card-custom mb-4" 
+                         data-id="{{ $item->id }}" 
+                         data-stok="{{ $item->produk->stok ?? 0 }}">
                         <div class="card-body d-flex produk-card align-items-center gap-3">
                             <input type="checkbox" name="produk[{{ $item->produk_id }}][check]" class="form-check-input item-checkbox" value="1">
                             <div>
@@ -105,6 +107,7 @@
                     </div>
                 @endforeach
             </div>
+
             <div class="card card-custom">
                 <div class="card-body">
                     <div class="h5 mb-3 fw-semibold">
@@ -131,9 +134,18 @@ function ubahJumlah(id, aksi) {
     const jumlahSpan = card.querySelector('.jumlah');
     const jumlahInput = card.querySelector('.input-jumlah');
     let jumlah = parseInt(jumlahSpan.innerText);
+    const stok = parseInt(card.getAttribute('data-stok'));
 
-    if (aksi === 'tambah') jumlah++;
-    else if (aksi === 'kurang' && jumlah > 1) jumlah--;
+    if (aksi === 'tambah') {
+        if (jumlah < stok) {
+            jumlah++;
+        } else {
+            alert('Jumlah tidak boleh melebihi stok yang tersedia!');
+            return;
+        }
+    } else if (aksi === 'kurang' && jumlah > 1) {
+        jumlah--;
+    }
 
     jumlahSpan.innerText = jumlah;
     jumlahInput.value = jumlah;
@@ -191,6 +203,12 @@ document.querySelectorAll('.item-checkbox').forEach(cb => {
         updateJumlahDipilih();
         updateTotal();
     });
+});
+
+// Update total dan jumlah dipilih saat load
+window.addEventListener('load', () => {
+    updateJumlahDipilih();
+    updateTotal();
 });
 </script>
 @endpush

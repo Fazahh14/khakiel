@@ -34,6 +34,7 @@ class CheckoutController extends Controller
                             'harga'  => (int) $data['harga'],
                             'jumlah' => max(1, (int) ($data['jumlah'] ?? 1)),
                             'gambar' => $data['gambar'] ?? null,
+                            'stok'   => Produk::find($data['id'])->stok ?? 0,
                         ];
                     }
                 }
@@ -47,11 +48,12 @@ class CheckoutController extends Controller
                         $jumlah = ($item->jumlah > 0) ? $item->jumlah : 1;
 
                         $produkTerpilih[] = [
-                            'id'     => $item->produk_id,
-                            'nama'   => $item->nama,
-                            'harga'  => (int) $item->harga,
-                            'jumlah' => $jumlah,
-                            'gambar' => $item->gambar ?? null,
+                            'id'     => $data['id'],
+                            'nama'   => $data['nama'],
+                            'harga'  => (int) $data['harga'],
+                            'jumlah' => max(1, (int) ($data['jumlah'] ?? 1)),
+                            'gambar' => $data['gambar'] ?? null,
+                            'stok'   => Produk::find($data['id'])->stok ?? 0,
                         ];
                     }
                 }
@@ -124,6 +126,17 @@ class CheckoutController extends Controller
                     'jumlah' => max(1, $jumlahBaru),
                     'gambar' => $item['gambar'] ?? null,
                 ];
+            }
+
+            foreach ($produkFinal as $produkItem) {
+                $produkModel = Produk::find($produkItem['id']);
+                if (!$produkModel) {
+                    return redirect()->route('checkout.form')->with('error', 'Produk tidak ditemukan.');
+                }
+
+                if ($produkItem['jumlah'] > $produkModel->stok) {
+                    return redirect()->route('checkout.form')->with('error', "Stok produk '{$produkModel->nama}' tidak mencukupi. Sisa stok: {$produkModel->stok}.");
+                }
             }
 
             $total = collect($produkFinal)->sum(fn($item) => $item['harga'] * $item['jumlah']);
