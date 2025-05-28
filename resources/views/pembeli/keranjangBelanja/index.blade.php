@@ -74,9 +74,11 @@
 
             <div id="keranjang-list">
                 @foreach ($keranjang as $item)
-                    <div class="card card-custom mb-4" data-id="{{ $item->id }}">
+                    <div class="card card-custom mb-4" 
+                         data-id="{{ $item->id }}" 
+                         data-stok="{{ $item->produk->stok ?? 0 }}">
                         <div class="card-body d-flex produk-card align-items-center gap-3">
-                            <input type="checkbox" name="produk[{{ $item->id }}][check]" class="form-check-input item-checkbox">
+                            <input type="checkbox" name="produk[{{ $item->produk_id }}][check]" class="form-check-input item-checkbox" value="1">
                             <div>
                                 <img src="{{ !empty($item->gambar) ? asset('storage/' . $item->gambar) : asset('storage/default.png') }}" alt="{{ $item->nama }}" class="rounded">
                             </div>
@@ -95,16 +97,17 @@
                                 <div class="mt-2 text-muted small">
                                     Total: Rp <span class="subtotal">{{ number_format($item['harga'] * $item['jumlah'], 0, ',', '.') }}</span>
                                 </div>
-                                <input type="hidden" name="produk[{{ $item->id }}][id]" class="produk-input" value="{{ $item->produk_id }}">
-                                <input type="hidden" name="produk[{{ $item->id }}][nama]" class="produk-input" value="{{ $item->nama }}">
-                                <input type="hidden" name="produk[{{ $item->id }}][harga]" class="produk-input" value="{{ $item['harga'] }}">
-                                <input type="hidden" name="produk[{{ $item->id }}][jumlah]" class="input-jumlah produk-input" value="{{ $item['jumlah'] }}">
-                                <input type="hidden" name="produk[{{ $item->id }}][gambar]" class="produk-input" value="{{ $item['gambar'] }}">
+                                <input type="hidden" name="produk[{{ $item->produk_id }}][id]" value="{{ $item->produk_id }}">
+                                <input type="hidden" name="produk[{{ $item->produk_id }}][nama]" value="{{ $item->nama }}">
+                                <input type="hidden" name="produk[{{ $item->produk_id }}][harga]" value="{{ $item->harga }}">
+                                <input type="hidden" name="produk[{{ $item->produk_id }}][jumlah]" class="input-jumlah produk-input" value="{{ $item->jumlah }}">
+                                <input type="hidden" name="produk[{{ $item->produk_id }}][gambar]" value="{{ $item->gambar }}">
                             </div>
                         </div>
                     </div>
                 @endforeach
             </div>
+
             <div class="card card-custom">
                 <div class="card-body">
                     <div class="h5 mb-3 fw-semibold">
@@ -131,9 +134,18 @@ function ubahJumlah(id, aksi) {
     const jumlahSpan = card.querySelector('.jumlah');
     const jumlahInput = card.querySelector('.input-jumlah');
     let jumlah = parseInt(jumlahSpan.innerText);
+    const stok = parseInt(card.getAttribute('data-stok'));
 
-    if (aksi === 'tambah') jumlah++;
-    else if (aksi === 'kurang' && jumlah > 1) jumlah--;
+    if (aksi === 'tambah') {
+        if (jumlah < stok) {
+            jumlah++;
+        } else {
+            alert('Jumlah tidak boleh melebihi stok yang tersedia!');
+            return;
+        }
+    } else if (aksi === 'kurang' && jumlah > 1) {
+        jumlah--;
+    }
 
     jumlahSpan.innerText = jumlah;
     jumlahInput.value = jumlah;
@@ -191,6 +203,12 @@ document.querySelectorAll('.item-checkbox').forEach(cb => {
         updateJumlahDipilih();
         updateTotal();
     });
+});
+
+// Update total dan jumlah dipilih saat load
+window.addEventListener('load', () => {
+    updateJumlahDipilih();
+    updateTotal();
 });
 </script>
 @endpush

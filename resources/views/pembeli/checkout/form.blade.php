@@ -79,7 +79,7 @@
             <div class="mb-3">
                 <label for="tanggal_pemesanan" class="form-label">Tanggal Pemesanan</label>
                 <input type="date" id="tanggal_pemesanan" name="tanggal_pemesanan" class="form-control" 
-       value="{{ old('tanggal_pemesanan', now()->format('Y-m-d')) }}" required>
+                    value="{{ old('tanggal_pemesanan', now()->format('Y-m-d')) }}" required>
 
                 @error('tanggal_pemesanan')
                     <small class="text-danger">{{ $message }}</small>
@@ -98,15 +98,15 @@
 
                     <label class="form-label mt-2">Harga Satuan</label>
                     <input type="text" class="form-control harga-satuan" 
-                           value="Rp {{ number_format($harga, 0, ',', '.') }}" readonly data-harga="{{ $harga }}">
-
+                        value="Rp {{ number_format($harga, 0, ',', '.') }}" readonly data-harga="{{ $harga }}">
+                
                     <label for="produk[{{ $index }}][jumlah]" class="form-label mt-2">Jumlah</label>
                     <input type="number" id="produk-{{ $index }}-jumlah" name="produk[{{ $index }}][jumlah]" 
-                           class="form-control jumlah-input" value="{{ $jumlah }}" min="1" required>
+                        class="form-control jumlah-input" value="{{ $jumlah }}" min="1" max="{{ $item['stok'] }}" required>
 
                     <label class="form-label mt-2">Total Harga</label>
                     <input type="text" class="form-control total-harga" 
-                           value="Rp {{ number_format($subtotal, 0, ',', '.') }}" readonly>
+                        value="Rp {{ number_format($subtotal, 0, ',', '.') }}" readonly>
 
                     {{-- Hidden inputs --}}
                     <input type="hidden" name="produk[{{ $index }}][id]" value="{{ $item['id'] }}">
@@ -114,6 +114,7 @@
                     <input type="hidden" name="produk[{{ $index }}][harga]" value="{{ $harga }}">
                     <input type="hidden" name="produk[{{ $index }}][gambar]" value="{{ $item['gambar'] ?? '' }}">
                     <input type="hidden" name="produk[{{ $index }}][check]" value="{{ $item['check'] ?? 1 }}">
+                    <input type="hidden" name="produk[{{ $index }}][stok]" value="{{ $item['stok'] }}">
                 </div>
             @endforeach
 

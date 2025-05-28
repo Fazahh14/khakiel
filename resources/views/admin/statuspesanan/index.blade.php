@@ -68,7 +68,7 @@
                             <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y H:i') }}</td>
                             <td>
                                 @foreach($transaksi->items as $item)
-                                    <div class="small">{{ $item->produk?->nama ?? '-' }}</div>
+                                    <div>{{ $item->produk?->nama ?? 'Produk tidak ditemukan' }}</div>
                                 @endforeach
                             </td>
                             <td>
@@ -79,11 +79,14 @@
                             <td><span class="badge bg-primary text-uppercase">{{ $transaksi->metode }}</span></td>
                             <td class="fw-semibold text-success">Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
                             <td>
-                                <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST">
+                                <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST" class="d-flex justify-content-center align-items-center">
                                     @csrf
                                     @method('PUT')
-                                    <select name="status" class="form-select form-select-sm bg-light" onchange="this.form.submit()" required>
-                                        @foreach(['sedang diproses', 'selesai'] as $status)
+                                    @php
+                                        $statuses = ['pending', 'belum diproses', 'sedang diproses', 'selesai'];
+                                    @endphp
+                                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" required>
+                                        @foreach($statuses as $status)
                                             <option value="{{ $status }}" {{ $transaksi->status == $status ? 'selected' : '' }}>
                                                 {{ ucfirst($status) }}
                                             </option>
