@@ -5,48 +5,51 @@
 @push('styles')
 <style>
     .btn-simpan {
-        background-color: #198754; 
+        background-color: #198754;
         color: white;
     }
     .btn-simpan:hover {
         background-color: #157347;
     }
     .btn-hapus {
-        background-color: #dc3545; 
+        background-color: #dc3545;
         color: white;
     }
     .btn-hapus:hover {
         background-color: #bb2d3b;
+    }
+    .table-custom th {
+        background-color: #f0f0f0;
+        font-weight: 600;
+    }
+    .table-custom td, .table-custom th {
+        vertical-align: middle;
+        padding: 0.75rem;
     }
 </style>
 @endpush
 
 @section('content')
 <div class="container page-content">
-    <div class="card p-4">
-        <h2 class="text-center mb-4 fw-bold text-uppercase text-dark">Kelola Status Pesanan</h2>
+    <div class="card shadow rounded-4 p-4">
+        <h2 class="text-center fw-bold text-uppercase mb-4 text-dark">Kelola Status Pesanan</h2>
 
         @if(session('success'))
-            <div class="alert alert-success text-center" id="flash-message">
-                {{ session('success') }}
-            </div>
+            <div class="alert alert-success text-center" id="flash-message">{{ session('success') }}</div>
         @endif
         @if(session('error'))
-            <div class="alert alert-danger text-center" id="flash-message">
-                {{ session('error') }}
-            </div>
+            <div class="alert alert-danger text-center" id="flash-message">{{ session('error') }}</div>
         @endif
 
         <div class="table-responsive">
-            <table class="table table-hover text-center align-middle">
+            <table class="table table-hover table-custom align-middle text-center rounded-4 overflow-hidden">
                 <thead class="table-light">
-
                     <tr>
                         <th>ID</th>
                         <th>Nama</th>
                         <th>Alamat</th>
                         <th>Telepon</th>
-                        <th>Tanggal Pesanan</th>
+                        <th>Tanggal</th>
                         <th>Produk</th>
                         <th>Qty</th>
                         <th>Metode</th>
@@ -62,10 +65,10 @@
                             <td>{{ $transaksi->nama }}</td>
                             <td>{{ $transaksi->alamat }}</td>
                             <td>{{ $transaksi->telepon }}</td>
-                            <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y H:i') }}</td>
                             <td>
                                 @foreach($transaksi->items as $item)
-                                    <div>{{ $item->produk->nama ?? 'Produk sudah dihapus' }}</div>
+                                    <div class="small">{{ $item->produk?->nama ?? '-' }}</div>
                                 @endforeach
                             </td>
                             <td>
@@ -73,13 +76,13 @@
                                     <div>{{ $item->qty }}</div>
                                 @endforeach
                             </td>
-                            <td>{{ ucfirst($transaksi->metode) }}</td>
-                            <td>Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
+                            <td><span class="badge bg-primary text-uppercase">{{ $transaksi->metode }}</span></td>
+                            <td class="fw-semibold text-success">Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
                             <td>
-                                <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST" class="d-flex justify-content-center">
+                                <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
-                                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <select name="status" class="form-select form-select-sm bg-light" onchange="this.form.submit()" required>
                                         @foreach(['sedang diproses', 'selesai'] as $status)
                                             <option value="{{ $status }}" {{ $transaksi->status == $status ? 'selected' : '' }}>
                                                 {{ ucfirst($status) }}
@@ -89,94 +92,23 @@
                                 </form>
                             </td>
                             <td>
-                                <form action="{{ route('admin.kelolastatuspesanan.destroy', $transaksi->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pesanan ini?')" style="display:inline-block;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-hapus">Hapus</button>
-                                </form>
-
-    <tr>
-        <th>ID</th>
-        <th>Nama</th>
-        <th>Alamat</th>
-        <th>Telepon</th>
-        <th>Tanggal Pesanan</th>
-        <th>Nama Produk</th>
-        <th>Qty</th>
-        <th>Metode</th> 
-        <th>Total</th>
-        <th>Status</th>
-        <th>Aksi</th>
-    </tr>
-</thead>
-<tbody>
-    @forelse($transaksis as $transaksi)
-    <tr>
-        <td>{{ $transaksi->id }}</td>
-        <td>{{ $transaksi->nama }}</td>
-        <td>{{ $transaksi->alamat }}</td>
-        <td>{{ $transaksi->telepon }}</td>
-        <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y H:i') }}</td>
-
-        <td>
-            @foreach($transaksi->items as $item)
-            <div>{{ $item->produk?->nama ?? 'Produk tidak ditemukan' }}</div>
-            @endforeach
-        </td>
-        <td>
-            @foreach($transaksi->items as $item)
-                <div>{{ $item->qty }}</div>
-            @endforeach
-        </td>
-
-        <td>{{ ucfirst($transaksi->metode) }}</td> 
-
-        <td>Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
-        <td>
-            <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST" class="d-flex justify-content-center align-items-center">
-                @csrf
-                @method('PUT')
-                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" required>
-                    @php
-                        $statuses = ['pending', 'belum diproses', 'sedang diproses', 'selesai'];
-                    @endphp
-                    @foreach($statuses as $status)
-                        <option value="{{ $status }}" {{ $transaksi->status == $status ? 'selected' : '' }}>
-                            {{ ucfirst($status) }}
-                        </option>
-                    @endforeach
-                </select>
-            </form>
-        </td>
-        <td>
-            <form action="{{ route('admin.kelolastatuspesanan.destroy', $transaksi->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pesanan ini?')" style="display:inline-block;">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-hapus">Hapus</button>
-            </form>
-
-            <form action="{{ route('admin.kelolastatuspesanan.kirimwa', $transaksi->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Kirim pesan WhatsApp ke {{ $transaksi->nama }}?')">
-                @csrf
-                <button type="submit" class="btn btn-sm btn-success ms-1">Kirim WA</button>
-            </form>
-        </td>
-    </tr>
-    @empty
-    <tr>
-        <td colspan="11" class="text-muted">Belum ada data pesanan.</td>
-    </tr>
-    @endforelse
-</tbody>
-
-
-                                <form action="{{ route('admin.kelolastatuspesanan.kirimwa', $transaksi->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Kirim pesan WhatsApp ke {{ $transaksi->nama }}?')">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-success ms-1">Kirim WA</button>
-                                </form>
+                                <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                    <form action="{{ route('admin.kelolastatuspesanan.destroy', $transaksi->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pesanan ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-hapus rounded-3">Hapus</button>
+                                    </form>
+                                    <form action="{{ route('admin.kelolastatuspesanan.kirimwa', $transaksi->id) }}" method="POST" onsubmit="return confirm('Kirim pesan WhatsApp ke {{ $transaksi->nama }}?')">
+                                        @csrf
+                                        <button class="btn btn-sm btn-success rounded-3">Kirim WA</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="11" class="text-muted">Belum ada data pesanan.</td></tr>
+                        <tr>
+                            <td colspan="11" class="text-muted py-4">Belum ada data pesanan.</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

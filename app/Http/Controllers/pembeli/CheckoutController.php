@@ -141,7 +141,7 @@ class CheckoutController extends Controller
                 'telepon'         => $validated['telepon'],
                 'tanggal_pesanan' => $validated['tanggal_pemesanan'],
                 'total'           => $total,
-                'status'          => 'pending',
+                'status'          => 'sedang diproses',
                 'metode'          => $validated['metode'],
             ]);
 
