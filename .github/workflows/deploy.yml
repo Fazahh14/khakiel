@@ -40,7 +40,7 @@ jobs:
         run: |
           composer install --prefer-dist --no-interaction --no-progress
 
-      - name: Configure MySQL
+      - name: Configure .env for MySQL
         run: |
           cp .env.example .env
           sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env
@@ -109,12 +109,17 @@ jobs:
 
       - name: Deploy to server via SCP/SSH
         run: |
+          # Buat direktori sementara di server
           ssh -o StrictHostKeyChecking=no -p 64000 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p ~/laravel-temp-deploy"
 
+          # Upload files ke server
           scp -o StrictHostKeyChecking=no -P 64000 -r ./deploy/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/laravel-temp-deploy/
 
+          # Jalankan deployment script di server
           ssh -o StrictHostKeyChecking=no -p 64000 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd ~/laravel-temp-deploy
+
+            # Copy files to production directory
             sudo rsync -avz --delete \
               --exclude='.env' \
               --exclude='storage' \
@@ -122,10 +127,12 @@ jobs:
               --exclude='.github' \
               ~/laravel-temp-deploy/ /var/www/laravel-app/
 
+            # Set permissions
             sudo chown -R www-data:www-data /var/www/laravel-app
             sudo chmod -R 755 /var/www/laravel-app/storage
             sudo chmod -R 755 /var/www/laravel-app/bootstrap/cache
 
+            # Run deployment commands
             cd /var/www/laravel-app
             sudo -u www-data composer install --optimize-autoloader --no-dev
             sudo -u www-data php artisan config:cache
@@ -133,5 +140,6 @@ jobs:
             sudo -u www-data php artisan view:cache
             sudo -u www-data php artisan migrate --force
 
+            # Cleanup
             rm -rf ~/laravel-temp-deploy
           EOF
