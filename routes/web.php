@@ -20,6 +20,9 @@ use App\Http\Controllers\Pembeli\CheckoutController;
 use App\Http\Controllers\Pembeli\BlogController;
 use App\Http\Controllers\Pembeli\InformasiPesananController;
 use App\Http\Controllers\Pembeli\WishlistController;
+use App\Http\Controllers\MidtransController;
+
+
 // =============================
 // Upload Gambar CKEditor (Tanpa Middleware)
 // =============================
@@ -65,7 +68,7 @@ Route::prefix('keranjang')->name('keranjang.')->group(function () {
     Route::post('/tambah/{id}', [KeranjangPembeliController::class, 'tambah'])->name('tambah'); // tambah jumlah produk
     Route::post('/kurang/{id}', [KeranjangPembeliController::class, 'kurang'])->name('kurang'); // kurang jumlah produk
     Route::post('/update', [KeranjangPembeliController::class, 'update'])->name('update');     // update keranjang (jumlah dsb)
-  Route::post('/hapus-ajax', [KeranjangPembeliController::class, 'hapusAjax'])->name('keranjang.hapusAjax');
+    Route::post('/hapus-ajax', [KeranjangPembeliController::class, 'hapusAjax'])->name('keranjang.hapusAjax');
 
 });
 Route::post('/keranjang/hapus-ajax', [KeranjangPembeliController::class, 'hapusAjax'])->name('keranjang.hapusAjax');
@@ -78,8 +81,13 @@ Route::post('/keranjang/hapus-ajax', [KeranjangPembeliController::class, 'hapusA
     Route::post('/checkout/store-produk', [CheckoutController::class, 'storeProduk'])->name('checkout.storeProduk');
     Route::get('/checkout', [CheckoutController::class, 'form'])->name('checkout.form');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
-Route::post('/midtrans/callback', [CheckoutController::class, 'callback'])->name('midtrans.callback');
+    Route::post('/midtrans/callback', [CheckoutController::class, 'callback'])->name('midtrans.callback');
     
+    Route::post('/midtrans/callback', [CheckoutController::class, 'callback']);
+    
+Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+Route::post('/midtrans/callback', [MidtransController::class, 'callback'])->name('midtrans.callback');
+
 
     // Informasi Pesanan
     Route::get('/informasi-pesanan', [InformasiPesananController::class, 'index'])->name('pembeli.informasipesanan.index');
@@ -87,7 +95,7 @@ Route::post('/midtrans/callback', [CheckoutController::class, 'callback'])->name
     // Wishlist
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/tambah', [WishlistController::class, 'tambah'])->name('wishlist.tambah');
-   Route::delete('/wishlist/hapus/{produk_id}', [WishlistController::class, 'hapus'])->name('wishlist.hapus');
+    Route::delete('/wishlist/hapus/{produk_id}', [WishlistController::class, 'hapus'])->name('wishlist.hapus');
     Route::get('/wishlist/count', [WishlistController::class, 'count']);
 });
 

@@ -96,17 +96,16 @@ class CheckoutController extends Controller
         }
     }
 
-    public function process(Request $request)
+        public function process(Request $request)
     {
         try {
             $validated = $request->validate([
-                'nama'               => 'required|string|max:100',
-                'alamat'             => 'required|string|max:255',
-                'telepon'            => ['required', 'regex:/^\d{10,16}$/'],
-                'metode'             => 'required|in:midtrans',
-                'tanggal_pemesanan'  => 'required|date',
-                'produk'             => 'required|array',
-                'produk.*.jumlah'    => 'required|integer|min:1',
+                'nama'              => 'required|string|max:100',
+                'alamat'            => 'required|string|max:255',
+                'telepon'           => ['required', 'regex:/^\d{10,16}$/'],
+                'tanggal_pemesanan' => 'required|date',
+                'produk'            => 'required|array',
+                'produk.*.jumlah'   => 'required|integer|min:1',
             ]);
 
             $produkSession = session('checkout_produk');
@@ -114,86 +113,64 @@ class CheckoutController extends Controller
                 return redirect()->route('keranjang.index')->with('error', 'Data produk tidak tersedia.');
             }
 
-            $produkRequest = $request->input('produk', []);
-
-            $produkFinal = [];
-            foreach ($produkSession as $index => $item) {
-                $jumlahBaru = isset($produkRequest[$index]['jumlah']) ? (int) $produkRequest[$index]['jumlah'] : $item['jumlah'];
-                $produkFinal[] = [
-                    'id'     => $item['id'],
-                    'nama'   => $item['nama'],
-                    'harga'  => $item['harga'],
-                    'jumlah' => max(1, $jumlahBaru),
-                    'gambar' => $item['gambar'] ?? null,
-                ];
-            }
-
-            foreach ($produkFinal as $produkItem) {
-                $produkModel = Produk::find($produkItem['id']);
-                if (!$produkModel) {
-                    return redirect()->route('checkout.form')->with('error', 'Produk tidak ditemukan.');
-                }
-
-                if ($produkItem['jumlah'] > $produkModel->stok) {
-                    return redirect()->route('checkout.form')->with('error', "Stok produk '{$produkModel->nama}' tidak mencukupi. Sisa stok: {$produkModel->stok}.");
-                }
-            }
-
-            $total = collect($produkFinal)->sum(fn($item) => $item['harga'] * $item['jumlah']);
-            if ($total <= 0) {
-                return redirect()->route('checkout.form')->with('error', 'Total transaksi tidak valid.');
-            }
-
+            // Generate order_id unik
             $orderId = 'ORD-' . now()->timestamp . '-' . Auth::id() . '-' . strtoupper(Str::random(5));
 
-            $transaksi = Transaksi::create([
-                'user_id'         => Auth::id(),
-                'order_id'        => $orderId,
-                'nama'            => $validated['nama'],
-                'alamat'          => $validated['alamat'],
-                'telepon'         => $validated['telepon'],
+            // Hitung total harga
+            $total = collect($produkSession)->sum(fn($item) => $item['harga'] * $item['jumlah']);
+
+            // Simpan data sementara di session untuk dipakai callback
+            session(['pending_order_'.$orderId => [
+                'user_id' => Auth::id(),
+                'nama'    => $validated['nama'],
+                'alamat'  => $validated['alamat'],
+                'telepon' => $validated['telepon'],
                 'tanggal_pesanan' => $validated['tanggal_pemesanan'],
                 'total'           => $total,
                 'status'          => 'sedang diproses',
                 'metode'          => $validated['metode'],
+                'produk'  => $produkSession,
+                'total'   => $total,
+            ]]);
+
+            // Konfigurasi Midtrans
+            Config::$serverKey = config('midtrans.server_key');
+            Config::$isProduction = config('midtrans.is_production');
+            Config::$isSanitized = true;
+            Config::$is3ds = true;
+
+            // Siapkan detail item untuk Midtrans
+            $itemDetails = array_map(fn($item) => [
+                'id'       => (string) $item['id'],
+                'price'    => (int) $item['harga'],
+                'quantity' => (int) $item['jumlah'],
+                'name'     => $item['nama'] ?? 'Produk',
+            ], $produkSession);
+
+            $params = [
+                'transaction_details' => [
+                    'order_id'     => $orderId,
+                    'gross_amount' => $total,
+                ],
+                'customer_details' => [
+                    'first_name' => $validated['nama'],
+                    'phone'      => $validated['telepon'],
+                ],
+                'item_details' => $itemDetails,
+            ];
+
+            $snapToken = Snap::getSnapToken($params);
+
+            return view('pembeli.checkout.snap', [
+                'snapToken' => $snapToken,
+                'orderId'   => $orderId,
             ]);
 
-            foreach ($produkFinal as $item) {
-                TransaksiItem::create([
-                    'transaksi_id' => $transaksi->id,
-                    'produk_id'    => $item['id'],
-                    'nama_produk'  => $item['nama'],
-                    'qty'          => $item['jumlah'],
-                    'harga'        => $item['harga'],
-                ]);
-
-                $produkModel = Produk::find($item['id']);
-                if ($produkModel) {
-                    $produkModel->stok = max(0, $produkModel->stok - $item['jumlah']);
-                    $produkModel->save();
-                }
-            }
-
-            $langsung = session('checkout_langsung', false);
-            if (!$langsung) {
-                Keranjang::where('user_id', Auth::id())
-                    ->whereIn('produk_id', collect($produkFinal)->pluck('id'))
-                    ->delete();
-            }
-
-            if ($validated['metode'] === 'midtrans') {
-                return $this->processMidtransPayment($orderId, $total, $produkFinal, $validated, $langsung);
-            }
-
-            session()->forget(['checkout_produk', 'checkout_total', 'checkout_langsung']);
-
-            return redirect()->route('pembeli.produk.index')
-                ->with('success', 'Pesanan berhasil dibuat. Order ID: ' . $orderId);
         } catch (\Exception $e) {
             Log::error('Checkout Process Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memproses pembayaran.');
-        }
-    }
+                } 
+            }
 
     protected function processMidtransPayment($orderId, $total, $produk, $data, $langsung)
     {
