@@ -52,7 +52,9 @@
             {{-- Input Jumlah --}}
             <label for="qty" class="form-label">Jumlah:</label>
             <input type="number" id="qty" class="form-control w-25 mb-3"
-                value="1" min="1" max="{{ $produk->stok }}"
+                value="{{ $produk->stok > 0 ? 1 : 0 }}"
+                min="{{ $produk->stok > 0 ? 1 : 0 }}"
+                max="{{ $produk->stok }}"
                 {{ $produk->stok < 1 ? 'disabled' : '' }}>
 
             {{-- Total Harga --}}
@@ -153,11 +155,20 @@
     const formKeranjangTotal = document.getElementById('form-keranjang-total');
 
     qtyInput?.addEventListener('input', function () {
-        let qty = parseInt(this.value) || 1;
-        qty = Math.max(1, Math.min(qty, maxStok));
+        let qty = parseInt(this.value);
+
+        if (maxStok < 1) {
+            qty = 0;
+        } else {
+            if (isNaN(qty) || qty < 1) qty = 1;
+            if (qty > maxStok) qty = maxStok;
+        }
+
+        this.value = qty;
 
         const total = qty * hargaSatuan;
         totalHargaDisplay.textContent = total.toLocaleString('id-ID');
+
         formBeliJumlah.value = qty;
         formBeliTotal.value = total;
         formKeranjangJumlah.value = qty;

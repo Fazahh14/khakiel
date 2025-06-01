@@ -1,57 +1,62 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="container">
-    <h2 class="mb-4">Rekap Harian Transaksi</h2>
+<div class="container py-4" style="background: #fff8e7; border-radius: 8px; box-shadow: 0 2px 8px rgba(122, 74, 0, 0.15);">
+    <h2 class="mb-4" style="color: #7a4a00; font-weight: 700;">Rekap Harian Transaksi</h2>
 
     {{-- Form Filter --}}
-    <form method="GET" class="row g-3 mb-4">
+    <form method="GET" class="row g-3 mb-4 p-3 rounded shadow-sm" style="background: #fff; border: 1px solid #d1bfa1;">
         <div class="col-md-3">
-            <label for="start_date" class="form-label">Tanggal Awal</label>
-            <input type="date" name="start_date" id="start_date" class="form-control"
+            <label for="start_date" class="form-label fw-semibold" style="color: #7a4a00;">Tanggal Awal</label>
+            <input type="date" name="start_date" id="start_date" class="form-control border-2" style="border-color: #c99a4a;"
                 value="{{ old('start_date', $startDate ?? '') }}" required>
         </div>
 
         <div class="col-md-3">
-            <label for="end_date" class="form-label">Tanggal Akhir</label>
-            <input type="date" name="end_date" id="end_date" class="form-control"
+            <label for="end_date" class="form-label fw-semibold" style="color: #7a4a00;">Tanggal Akhir</label>
+            <input type="date" name="end_date" id="end_date" class="form-control border-2" style="border-color: #c99a4a;"
                 value="{{ old('end_date', $endDate ?? '') }}" required>
         </div>
 
         <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary w-100">Tampilkan</button>
+            <button type="submit" class="btn" style="background-color: #c99a4a; color: white; font-weight: 600; width: 100%; box-shadow: 0 2px 5px rgba(201, 154, 74, 0.5);">
+                Tampilkan
+            </button>
         </div>
     </form>
 
     {{-- Tabel Rekap --}}
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="table-dark">
+    <div class="table-responsive shadow rounded" style="background: #fff; border: 1px solid #d1bfa1;">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <thead style="background-color: #c99a4a; color: white;">
                 <tr>
                     <th>Tanggal Pesanan</th>
                     <th>Nama Produk</th>
-                    <th>Qty</th>
-                    <th>Total (Rp)</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Total (Rp)</th>
                 </tr>
             </thead>
             <tbody>
                 @if(isset($rekap['items']) && count($rekap['items']) > 0)
                     @foreach($rekap['items'] as $item)
                         <tr>
-                            {{-- Format tanggal tanpa jam --}}
                             <td>{{ \Carbon\Carbon::parse($item['tanggal'])->format('d-m-Y') }}</td>
                             <td>{{ $item['nama_produk'] }}</td>
-                            <td>{{ $item['qty'] }}</td>
-                            <td>Rp {{ number_format($item['total'], 0, ',', '.') }}</td>
+                            <td class="text-center">{{ $item['qty'] }}</td>
+                            <td class="text-end">Rp {{ number_format($item['total'], 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
                 @elseif(!empty($startDate) && !empty($endDate))
                     <tr>
-                        <td colspan="4" class="text-center">Tidak ada data transaksi pada filter yang dipilih.</td>
+                        <td colspan="4" class="text-center text-muted fst-italic py-4">
+                            Tidak ada data transaksi pada filter yang dipilih.
+                        </td>
                     </tr>
                 @else
                     <tr>
-                        <td colspan="4" class="text-center">Silakan pilih tanggal awal dan tanggal akhir terlebih dahulu.</td>
+                        <td colspan="4" class="text-center text-muted fst-italic py-4">
+                            Silakan pilih tanggal awal dan tanggal akhir terlebih dahulu.
+                        </td>
                     </tr>
                 @endif
             </tbody>
@@ -60,9 +65,11 @@
 
     {{-- Total Pendapatan --}}
     @if(isset($rekap['items']) && count($rekap['items']) > 0)
-        <div class="mt-3">
+        <div class="mt-4 text-end">
             <h5>Total Pendapatan: 
-                <strong>Rp {{ number_format($rekap['total_harga'], 0, ',', '.') }}</strong>
+                <span class="badge" style="background-color: #7a4a00; font-size: 1.25rem; color: white;">
+                    Rp {{ number_format($rekap['total_harga'], 0, ',', '.') }}
+                </span>
             </h5>
         </div>
     @endif
@@ -70,9 +77,9 @@
     {{-- Grafik Pendapatan --}}
     @if(!empty($grafikLabels) && !empty($grafikData))
         <div class="mt-5">
-            <h3>Grafik Pendapatan</h3>
+            <h3 style="color: #7a4a00; margin-bottom: 1rem;">Grafik Pendapatan</h3>
             <div style="overflow-x: auto;">
-                <canvas id="grafikTanggalChart" height="300" style="min-width: 600px;"></canvas>
+                <canvas id="grafikTanggalChart" height="320" style="min-width: 600px; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(122, 74, 0, 0.2);"></canvas>
             </div>
         </div>
     @endif
@@ -90,8 +97,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const bgColors = data.map(value => {
             const ratio = maxData > 0 ? value / maxData : 0;
-            const blue = Math.floor(150 + 105 * ratio);
-            return `rgba(54, 162, ${blue}, 0.7)`;
+            // Ganti ke warna coklat pastel, dari terang ke gelap
+            const base = 122; // coklat rgb(122,74,0)
+            const intensity = Math.floor(74 + (180 * ratio));
+            return `rgba(${base}, ${74}, 0, 0.7)`; // rgba coklat gelap semi transparan
         });
 
         const ctx = document.getElementById('grafikTanggalChart').getContext('2d');
@@ -103,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     label: 'Pendapatan (Rp)',
                     data: data,
                     backgroundColor: bgColors,
-                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderColor: 'rgba(122, 74, 0, 1)',
                     borderWidth: 1,
                     borderRadius: 4,
                     maxBarThickness: 40,

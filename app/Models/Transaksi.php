@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema; // WAJIB untuk \Schema
+use Illuminate\Support\Facades\Schema;
 use App\Models\User;
 
 class Transaksi extends Model
@@ -17,7 +17,6 @@ class Transaksi extends Model
         'tanggal_pesanan',
         'total',
         'status',
-        'status_pembayaran',
         'metode',
     ];
 

@@ -4,25 +4,54 @@
 
 @push('styles')
 <style>
+    .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+        font-family: 'Poppins', sans-serif;
+        color: #333;
+    }
+
+    h2 {
+        margin-bottom: 30px;
+        font-weight: 700;
+        font-size: 2rem;
+        text-align: center;
+        color: #222;
+    }
+
+    a.wishlist-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
     .wishlist-row {
-        background-color: #fdf1e8;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 20px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        background-color: #fff;
+        transition: box-shadow 0.3s ease;
+        cursor: pointer;
+    }
+
+    .wishlist-row:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 
     .wishlist-img {
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 100px;
         object-fit: cover;
         border-radius: 8px;
-        border: 2px solid #fff;
-        box-shadow: 0 0 0 2px #ccc;
+        margin-right: 25px;
+        flex-shrink: 0;
+        border: 1px solid #ccc;
+        background-color: #f9f9f9;
     }
 
     .wishlist-info {
@@ -30,97 +59,187 @@
     }
 
     .wishlist-info h5 {
-        font-size: 1rem;
-        color: #00a;
+        margin: 0 0 8px 0;
         font-weight: 600;
-        margin-bottom: 4px;
+        font-size: 1.25rem;
+        color: #111;
     }
 
     .wishlist-info p {
         margin: 0;
-        color: #333;
+        font-size: 1.1rem;
+        color: #555;
+        font-weight: 500;
     }
 
     .wishlist-stok {
-        min-width: 160px;
+        width: 140px;
         text-align: center;
         font-weight: 600;
-    }
-
-    .wishlist-stok span {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 8px;
-        font-size: 0.85rem;
-    }
-
-    .stok-terbatas {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-
-    .stok-habis {
-        border: 2px dashed #888;
-        padding: 6px 12px;
-        font-weight: 600;
-        color: #444;
+        font-size: 0.95rem;
+        flex-shrink: 0;
     }
 
     .stok-tersedia {
-        color: #198754;
+        color: #2e7d32; /* hijau */
+    }
+
+    .stok-habis {
+        color: #d32f2f; /* merah */
+    }
+
+    .stok-terbatas {
+        color: #fbc02d; /* kuning */
+    }
+
+    .text-muted {
+        color: #999 !important;
+    }
+
+    form button {
+        background-color: #d32f2f;
+        border: none;
+        padding: 8px 14px;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.25s ease;
+        flex-shrink: 0;
+        margin-left: 20px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+    }
+
+    form button:hover {
+        background-color: #b71c1c;
+    }
+
+    form button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(211,47,47,0.5);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+        .wishlist-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .wishlist-img {
+            margin-bottom: 12px;
+        }
+        .wishlist-stok {
+            width: 100%;
+            margin-top: 8px;
+            text-align: left;
+        }
+        form button {
+            margin-left: 0;
+            margin-top: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .empty-msg {
+        text-align: center;
+        color: #777;
+        font-size: 1.1rem;
+        margin-top: 50px;
+        font-style: italic;
     }
 </style>
 @endpush
 
 @section('content')
 <div class="container py-4">
-    <h2 class="text-center fw-bold mb-4">Produk yang Disukai</h2>
+    <h2>Produk yang Disukai</h2>
 
     @forelse ($wishlist as $item)
-        <div class="wishlist-row">
-            <img src="{{ asset('storage/' . $item['gambar']) }}" class="wishlist-img" alt="{{ $item['nama'] }}">
+        <div style="display:flex; align-items:center; margin-bottom:10px;">
+            <a href="{{ route('pembeli.produk.show', $item['id']) }}" class="wishlist-link" style="flex:1;">
+                <div class="wishlist-row" data-id="{{ $item['id'] }}">
+                    <img src="{{ asset('storage/' . $item['gambar']) }}" class="wishlist-img" alt="{{ $item['nama'] }}">
 
-            <div class="wishlist-info">
-                <h5>{{ $item['nama'] }}</h5>
-                <p>Rp {{ number_format($item['harga'], 0, ',', '.') }}</p>
-            </div>
+                    <div class="wishlist-info">
+                        <h5>{{ $item['nama'] }}</h5>
+                        <p>Rp {{ number_format($item['harga'], 0, ',', '.') }}</p>
+                    </div>
 
-            <div class="wishlist-stok">
-                @if (!isset($item['stok']))
-                    <span class="text-muted">Stok tidak diketahui</span>
-                @elseif($item['stok'] == 0)
-                    <span class="stok-habis">Stok habis</span>
-                @elseif($item['stok'] == 1)
-                    <span class="stok-terbatas">hanya 1 tersisa di stok</span>
-                @else
-                    <span class="stok-tersedia">tersedia</span>
-                @endif
-            </div>
+                    <div class="wishlist-stok">
+                        @if (!isset($item['stok']))
+                            <span class="text-muted stok-text">Stok tidak diketahui</span>
+                        @elseif($item['stok'] == 0)
+                            <span class="stok-habis stok-text">Stok habis</span>
+                        @elseif($item['stok'] == 1)
+                            <span class="stok-terbatas stok-text">Hanya 1 tersisa</span>
+                        @else
+                            <span class="stok-tersedia stok-text">Tersedia</span>
+                        @endif
+                    </div>
+                </div>
+            </a>
+
+            <form action="{{ route('wishlist.hapus', $item['id']) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus produk ini dari wishlist?')" style="margin-left: 15px;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" title="Hapus dari Wishlist">🗑️ Hapus</button>
+            </form>
         </div>
     @empty
-        <div class="text-muted text-center">Belum ada produk disukai.</div>
+        <div class="empty-msg">Belum ada produk disukai.</div>
     @endforelse
 </div>
 
-    <script>
-        function updateWishlistCount() {
-            fetch('/wishlist/count')
-                .then(response => response.json())
+<script>
+    // Fungsi polling cek stok terbaru setiap 30 detik
+    function fetchLatestStock() {
+        const rows = document.querySelectorAll('.wishlist-row');
+
+        rows.forEach(row => {
+            const productId = row.getAttribute('data-id');
+
+            fetch(`/api/product-stock/${productId}`)
+                .then(res => res.json())
                 .then(data => {
-                    const countElement = document.getElementById('wishlist-count');
-                    if (data.count > 0) {
-                        countElement.textContent = data.count;
-                        countElement.style.display = 'flex';
-                    } else {
-                        countElement.style.display = 'none';
+                    if (data && typeof data.stok !== 'undefined') {
+                        const stokSpan = row.querySelector('.stok-text');
+                        // Update teks dan kelas warna stok
+                        stokSpan.textContent = getStockText(data.stok);
+                        stokSpan.className = 'stok-text ' + getStockClass(data.stok);
                     }
+                })
+                .catch(err => {
+                    console.error('Error fetching stock:', err);
                 });
-        }
-
-        // Panggil saat load
-        document.addEventListener('DOMContentLoaded', function () {
-            updateWishlistCount();
         });
-    </script>
+    }
 
+    function getStockText(stok) {
+        if (stok === null || typeof stok === 'undefined') {
+            return 'Stok tidak diketahui';
+        }
+        if (stok == 0) return 'Stok habis';
+        if (stok == 1) return 'Hanya 1 tersisa';
+        if (stok > 1) return 'Tersedia';
+        return 'Stok tidak diketahui';
+    }
+
+    function getStockClass(stok) {
+        if (stok === null || typeof stok === 'undefined') {
+            return 'text-muted';
+        }
+        if (stok == 0) return 'stok-habis';
+        if (stok == 1) return 'stok-terbatas';
+        if (stok > 1) return 'stok-tersedia';
+        return 'text-muted';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchLatestStock();
+        setInterval(fetchLatestStock, 30000); // tiap 30 detik update stok
+    });
+</script>
 @endsection

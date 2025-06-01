@@ -4,16 +4,11 @@ namespace App\Http\Controllers\Pembeli;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Produk;
 use App\Models\Wishlist;
 use Illuminate\Support\Facades\Auth;
 
-
 class WishlistController extends Controller
 {
-    /**
-     * Menampilkan daftar produk yang disukai.
-     */
     public function index()
     {
         $wishlist = Wishlist::with('produk')
@@ -32,16 +27,12 @@ class WishlistController extends Controller
         return view('pembeli.wishlist.index', compact('wishlist'));
     }
 
-    /**
-     * Menambahkan produk ke daftar kesukaan.
-     */
     public function tambah(Request $request)
     {
         $request->validate(['produk_id' => 'required|exists:produk,id']);
 
         $user = Auth::user();
 
-        // Cegah duplikat
         $existing = Wishlist::where('user_id', $user->id)
             ->where('produk_id', $request->produk_id)
             ->first();
@@ -56,21 +47,18 @@ class WishlistController extends Controller
         return back()->with('success', 'Produk ditambahkan ke daftar kesukaan.');
     }
 
-    /**
-     * Menghapus produk dari daftar kesukaan.
-     */
-    public function hapus($id)
+    public function hapus($produk_id)
     {
         $user = Auth::user();
 
         Wishlist::where('user_id', $user->id)
-            ->where('produk_id', $id)
+            ->where('produk_id', $produk_id)
             ->delete();
 
         return back()->with('success', 'Produk dihapus dari kesukaan.');
     }
 
-        public function count()
+    public function count()
     {
         $count = Auth::check() ? Auth::user()->wishlist()->count() : 0;
         return response()->json(['count' => $count]);

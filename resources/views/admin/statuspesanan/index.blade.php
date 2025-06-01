@@ -2,32 +2,113 @@
 
 @section('title', 'Kelola Status Pesanan')
 
-@push('styles')
 <style>
-    .btn-simpan {
-        background-color: #198754;
-        color: white;
+    /* Styling tombol aksi */
+    .btn-aksi {
+        font-size: 0.85rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s ease;
+        user-select: none;
     }
-    .btn-simpan:hover {
-        background-color: #157347;
+
+    .btn-aksi i {
+        font-size: 1rem;
     }
+
+    /* Tombol Hapus - merah soft */
     .btn-hapus {
-        background-color: #dc3545;
-        color: white;
+        background-color: #f08080;
+        color: #fff;
     }
+
     .btn-hapus:hover {
-        background-color: #bb2d3b;
+        background-color: #e76e6e;
+        transform: translateY(-2px);
     }
+
+    /* Tombol Kirim WA - abu abu soft */
+    .btn-wa {
+        background-color: #9e9e9e; /* abu soft */
+        color: #fff;
+    }
+
+    .btn-wa:hover {
+        background-color: #7e7e7e;
+        transform: translateY(-2px);
+    }
+
+    /* Select status */
+    .form-select {
+        min-width: 130px;
+        font-size: 0.9rem;
+        border-radius: 0.4rem;
+        border: 1px solid #ced4da;
+        transition: border-color 0.3s ease;
+        cursor: pointer;
+    }
+
+    .form-select:hover,
+    .form-select:focus {
+        border-color: #6da8f7;
+        outline: none;
+        box-shadow: 0 0 5px rgba(109, 168, 247, 0.5);
+    }
+
+    /* Badge style */
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.4em 0.6em;
+        border-radius: 0.4rem;
+    }
+
+    /* Table styling */
     .table-custom th {
-        background-color: #f0f0f0;
+        background-color: #f8f9fa;
+        text-align: center;
         font-weight: 600;
-    }
-    .table-custom td, .table-custom th {
         vertical-align: middle;
-        padding: 0.75rem;
+    }
+
+    .table-custom td {
+        vertical-align: middle;
+        padding: 0.85rem;
+        text-align: center;
+    }
+
+    .table-custom tr:hover {
+        background-color: #f1f3f5;
+    }
+
+    /* Lebarkan kolom Total */
+    .table-custom th:nth-child(9),
+    .table-custom td:nth-child(9) {
+        min-width: 180px;
+        font-weight: 600;
+        color: #020202; /* hijau teks total */
+        text-align: center;
+    }
+
+    /* Wrapper tombol aksi */
+    .aksi-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    /* Container padding */
+    .page-content {
+        padding-bottom: 2rem;
     }
 </style>
-@endpush
 
 @section('content')
 <div class="container page-content">
@@ -42,8 +123,8 @@
         @endif
 
         <div class="table-responsive">
-            <table class="table table-hover table-custom align-middle text-center rounded-4 overflow-hidden">
-                <thead class="table-light">
+            <table class="table table-hover table-custom">
+                <thead>
                     <tr>
                         <th>ID</th>
                         <th>Nama</th>
@@ -65,10 +146,10 @@
                             <td>{{ $transaksi->nama }}</td>
                             <td>{{ $transaksi->alamat }}</td>
                             <td>{{ $transaksi->telepon }}</td>
-                            <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y H:i') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($transaksi->tanggal_pesanan)->format('d-m-Y') }}</td>
                             <td>
                                 @foreach($transaksi->items as $item)
-                                    <div>{{ $item->produk?->nama ?? 'Produk tidak ditemukan' }}</div>
+                                    <div>{{ $item->produk?->nama ?? '-' }}</div>
                                 @endforeach
                             </td>
                             <td>
@@ -79,31 +160,29 @@
                             <td><span class="badge bg-primary text-uppercase">{{ $transaksi->metode }}</span></td>
                             <td class="fw-semibold text-success">Rp {{ number_format($transaksi->total, 0, ',', '.') }}</td>
                             <td>
-                                <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST" class="d-flex justify-content-center align-items-center">
+                                <form action="{{ route('admin.kelolastatuspesanan.update', $transaksi->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
-                                    @php
-                                        $statuses = ['pending', 'belum diproses', 'sedang diproses', 'selesai'];
-                                    @endphp
-                                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" required>
-                                        @foreach($statuses as $status)
-                                            <option value="{{ $status }}" {{ $transaksi->status == $status ? 'selected' : '' }}>
-                                                {{ ucfirst($status) }}
-                                            </option>
-                                        @endforeach
+                                    <select name="status" class="form-select" onchange="this.form.submit()" required>
+                                        <option value="sedang diproses" {{ $transaksi->status == 'sedang diproses' ? 'selected' : '' }}>Sedang Diproses</option>
+                                        <option value="selesai" {{ $transaksi->status == 'selesai' ? 'selected' : '' }}>Selesai</option>
                                     </select>
                                 </form>
                             </td>
                             <td>
-                                <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                <div class="aksi-wrapper">
+                                    <form action="{{ route('admin.kelolastatuspesanan.kirimwa', $transaksi->id) }}" method="POST" onsubmit="return confirm('Kirim pesan WhatsApp ke {{ $transaksi->nama }}?')">
+                                        @csrf
+                                        <button type="submit" class="btn-aksi btn-wa" title="Kirim WhatsApp">
+                                            <i class="bi bi-whatsapp"></i> Kirim WA
+                                        </button>
+                                    </form>
                                     <form action="{{ route('admin.kelolastatuspesanan.destroy', $transaksi->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pesanan ini?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-sm btn-hapus rounded-3">Hapus</button>
-                                    </form>
-                                    <form action="{{ route('admin.kelolastatuspesanan.kirimwa', $transaksi->id) }}" method="POST" onsubmit="return confirm('Kirim pesan WhatsApp ke {{ $transaksi->nama }}?')">
-                                        @csrf
-                                        <button class="btn btn-sm btn-success rounded-3">Kirim WA</button>
+                                        <button type="submit" class="btn-aksi btn-hapus" title="Hapus Pesanan">
+                                            <i class="bi bi-trash3"></i> Hapus
+                                        </button>
                                     </form>
                                 </div>
                             </td>

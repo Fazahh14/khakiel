@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TransaksiItem extends Model
 {
-    protected $table = 'transaksi_items'; // pastikan nama tabel sesuai
+    protected $table = 'transaksi_items'; // pastikan sesuai
 
     protected $fillable = [
         'transaksi_id',
@@ -16,15 +16,15 @@ class TransaksiItem extends Model
         'harga',
     ];
 
-    // Relasi ke produk (asumsi kamu punya model Produk)
+    // Relasi ke produk (opsional jika ada model Produk)
     public function produk()
     {
         return $this->belongsTo(Produk::class, 'produk_id');
     }
 
-    // Relasi ke transaksi induk
+    // Relasi ke transaksi induk (INI YANG BENAR)
     public function transaksi()
     {
-        return $this->belongsTo(Produk::class, 'produk_id');
+        return $this->belongsTo(Transaksi::class, 'transaksi_id');
     }
 }

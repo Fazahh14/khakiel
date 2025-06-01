@@ -7,16 +7,16 @@ use Illuminate\Http\Request;
 use App\Models\Transaksi;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class KelolaStatusPesananController extends Controller
 {
     public function index()
     {
-        // Otomatis ubah ke "sedang diproses" kalau sudah bayar
+        // Otomatis ubah status menjadi "sedang diproses" kalau sudah bayar
         if (Schema::hasColumn('transaksis', 'status_pembayaran')) {
             $transaksisAuto = Transaksi::where('status_pembayaran', 'sudah bayar')
-                ->where('status', '!=', 'sedang diproses')
-                ->where('status', '!=', 'selesai')
+                ->whereNotIn('status', ['sedang diproses', 'selesai'])
                 ->get();
 
             foreach ($transaksisAuto as $trx) {
@@ -25,7 +25,9 @@ class KelolaStatusPesananController extends Controller
             }
         }
 
-        $transaksis = Transaksi::with(['items.produk'])->orderBy('id', 'asc')->paginate(25);
+        $transaksis = Transaksi::with(['items.produk'])
+            ->orderBy('id', 'asc')
+            ->paginate(25);
 
         return view('admin.statuspesanan.index', compact('transaksis'));
     }
@@ -41,49 +43,59 @@ class KelolaStatusPesananController extends Controller
         $transaksi->save();
 
         return redirect()->route('admin.kelolastatuspesanan.index')
-                         ->with('success', 'Status pesanan berhasil diperbarui.');
+            ->with('success', 'Status pesanan berhasil diperbarui.');
     }
 
     public function kirimwa($id)
     {
-        $transaksi = Transaksi::with('items.produk')->findOrFail($id);
-
-        if (!$transaksi->telepon) {
-            return back()->with('error', 'Nomor telepon pelanggan tidak tersedia.');
-        }
-
-        $no = preg_replace('/[^0-9]/', '', $transaksi->telepon);
-        if (substr($no, 0, 1) === '0') {
-            $no = '62' . substr($no, 1);
-        }
-
-        $pesan = "🎉 Hai {$transaksi->nama}, Sahabat setia Khakiel!\n";
-        $pesan .= "Kami baru saja mencatat bahwa kamu tergoda buat checkout 😄\n\n";
-        $pesan .= "📦 Detail pesanan kamu:\n";
-        foreach ($transaksi->items as $item) {
-            $produkNama = $item->produk->nama ?? 'Produk sudah dihapus';
-            $pesan .= "• {$produkNama} (qty: {$item->qty})\n";
-        }
-        $pesan .= "\n💰 Total belanja: Rp " . number_format($transaksi->total, 0, ',', '.') . "\n";
-        $pesan .= "📌 Status: {$transaksi->status}\n\n";
-        $pesan .= "Terima kasih sudah belanja di Khakiel. Kamu memang top! 🚀\n";
-        $pesan .= "Kalau ada yang mau ditanyain, tim kami siap bantu kapan pun! 🤝";
-
         try {
+            $transaksi = Transaksi::with('items.produk')->findOrFail($id);
+
+            if (!$transaksi->telepon) {
+                return back()->with('error', 'Nomor telepon pelanggan tidak tersedia.');
+            }
+
+            $no = preg_replace('/[^0-9]/', '', $transaksi->telepon);
+            if (substr($no, 0, 1) === '0') {
+                $no = '62' . substr($no, 1);
+            }
+
+            $pesan = "🎉 Hai {$transaksi->nama}, Sahabat setia Khakiel!\n";
+            $pesan .= "Kami baru saja mencatat bahwa kamu tergoda buat checkout 😄\n\n";
+            $pesan .= "📦 Detail pesanan kamu:\n";
+            foreach ($transaksi->items as $item) {
+                $produkNama = $item->produk->nama ?? 'Produk sudah dihapus';
+                $pesan .= "• {$produkNama} (qty: {$item->qty})\n";
+            }
+            $pesan .= "\n💰 Total belanja: Rp " . number_format($transaksi->total, 0, ',', '.') . "\n";
+            $pesan .= "📌 Status: {$transaksi->status}\n\n";
+            $pesan .= "Terima kasih sudah belanja di Khakiel. Kamu memang top! 🚀\n";
+            $pesan .= "Kalau ada yang mau ditanyain, tim kami siap bantu kapan pun! 🤝";
+
             $response = Http::withHeaders([
-                'Authorization' => env('FONNTE_API_KEY', 'suizRXTkDa7FMcqYPjkL')
+                'Authorization' => env('FONNTE_API_KEY', 'suizRXTkDa7FMcqYPjkL'),
             ])->asForm()->post(env('FONNTE_API_URL') . '/send', [
                 'target' => $no,
                 'message' => $pesan,
                 'countryCode' => '62',
             ]);
 
+            // LOGGING respons dari API Fonnte untuk debug
+            Log::info('Respon Fonnte:', [
+                'status_code' => $response->status(),
+                'body' => $response->json(),
+            ]);
+
             if ($response->successful()) {
                 return back()->with('success', 'Pesan WhatsApp berhasil dikirim.');
             } else {
-                return back()->with('error', 'Gagal mengirim pesan WhatsApp: ' . $response->body());
+                $errorMessage = $response->json()['reason'] ?? $response->body();
+                return back()->with('error', 'Gagal mengirim pesan WhatsApp: ' . $errorMessage);
             }
         } catch (\Exception $e) {
+            Log::error('Error Kirim WA:', [
+                'message' => $e->getMessage(),
+            ]);
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
@@ -94,6 +106,6 @@ class KelolaStatusPesananController extends Controller
         $transaksi->delete();
 
         return redirect()->route('admin.kelolastatuspesanan.index')
-                         ->with('success', 'Pesanan berhasil dihapus.');
+            ->with('success', 'Pesanan berhasil dihapus.');
     }
 }
