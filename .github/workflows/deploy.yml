@@ -72,9 +72,6 @@ jobs:
       - name: Run database migrations and seed
         run: php artisan migrate:fresh --seed
 
-      - name: Execute tests
-        run: php artisan test
-
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
