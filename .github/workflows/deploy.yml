@@ -37,8 +37,7 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: |
-          composer install --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Configure .env for MySQL
         run: |
@@ -77,12 +76,12 @@ jobs:
         with:
           name: laravel-d4rpl2b-kelompok5
           path: |
-            .
+            ./
             !.github/
             !.git/
             !node_modules/
-            !vendor/
             !storage/debugbar/
+            !vendor/
           retention-days: 1
 
   deploy:
@@ -105,38 +104,41 @@ jobs:
           port: 22
 
       - name: Deploy to server via SCP/SSH
+        env:
+          DEPLOY_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_HOST: ${{ secrets.SSH_HOST }}
         run: |
-          # Buat direktori sementara di server
-          ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.SSH_PRIVATE_KEY }}@${{ secrets.SSH_HOST }} "mkdir -p ~/laravel-temp-deploy"
+          echo "📁 Membuat direktori sementara di server"
+          ssh -o StrictHostKeyChecking=no -p 22 $DEPLOY_USER@$DEPLOY_HOST "mkdir -p ~/laravel-temp-deploy"
 
-          # Upload files ke server
-          scp -o StrictHostKeyChecking=no -P 22 -r ./deploy/* ${{ secrets.KNOWN_HOSTS }}@${{ secrets.SSH_HOST }}:~/laravel-temp-deploy/
+          echo "📤 Upload file ke server"
+          scp -o StrictHostKeyChecking=no -P 22 -r ./deploy/* $DEPLOY_USER@$DEPLOY_HOST:~/laravel-temp-deploy/
 
-          # Jalankan deployment script di server
-          ssh -o StrictHostKeyChecking=no -p 22 ${{ secrets.USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+          echo "🚀 Eksekusi deployment di server"
+          ssh -o StrictHostKeyChecking=no -p 22 $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
             cd ~/laravel-temp-deploy
 
-            # Copy files to production directory
+            echo "📦 Menyalin file ke direktori produksi"
             sudo rsync -avz --delete \
               --exclude='.env' \
               --exclude='storage' \
               --exclude='.git' \
               --exclude='.github' \
-              ~/laravel-temp-deploy/ /var/www/laravel-d4rpl2b-kelompok5/
+              ./ /var/www/laravel-d4rpl2b-kelompok5/
 
-            # Set permissions
+            echo "🔐 Set permission"
             sudo chown -R www-data:www-data /var/www/laravel-d4rpl2b-kelompok5
             sudo chmod -R 755 /var/www/laravel-d4rpl2b-kelompok5/storage
             sudo chmod -R 755 /var/www/laravel-d4rpl2b-kelompok5/bootstrap/cache
 
-            # Run deployment commands
+            echo "🛠 Jalankan Laravel command"
             cd /var/www/laravel-d4rpl2b-kelompok5
-            sudo -u www-data composer install --optimize-autoloader --no-dev
+            sudo -u www-data composer install --no-dev --optimize-autoloader
             sudo -u www-data php artisan config:cache
             sudo -u www-data php artisan route:cache
             sudo -u www-data php artisan view:cache
             sudo -u www-data php artisan migrate --force
 
-            # Cleanup
+            echo "🧹 Cleanup"
             rm -rf ~/laravel-temp-deploy
           EOF
